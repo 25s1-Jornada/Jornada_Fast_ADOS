@@ -1,17 +1,58 @@
-# Jornada_Fast_ADOS  
+# 🚀 Jornada_Fast_ADOS
 
-ideias para realização das analises: 
-informações iniciais
-id/OS, solicitante, data de criação da os , produto ou serviço , valor , status, numero de serie
-precisamos analisar a quantidade de ordem de serviço de acordo com a peça que será trocada, ver se tem alguma
+📊 Projeto de Análise de Dados das Ordens de Serviço – **Jornada 2025**
 
+---
 
-como devemos mostrar os dados:
+## 🎯 Objetivo do Projeto
 
+O grupo responsável pela **Análise de Dados das Ordens de Serviço (ADOS)** tem como principal objetivo identificar padrões, gerar insights e criar alertas a partir das informações coletadas nas OSs.  
+Através dessas análises, será possível prever falhas recorrentes em produtos e contribuir com melhorias nos processos internos da **Fast Gôndolas**.
 
+---
 
-Iremos fazer uma análise de previsão de produtos (Analise de falha)
-Análises de OS semanal Local
-Análises dos status
-Análises de prioridades (TALVEZ)
+## 🔍 Informações Iniciais a Serem Analisadas
 
+As seguintes informações servirão como base para as análises iniciais:
+
+- 🆔 ID da Ordem de Serviço (OS)  
+- 🙋‍♂️ Solicitante  
+- 📅 Data de criação da OS  
+- 🛠 Produto ou serviço  
+- 💰 Valor  
+- 📌 Status da OS  
+- 🔢 Número de série  
+
+🔎 Uma das primeiras análises será a **quantidade de ordens de serviço por peça trocada**, ajudando a detectar padrões de falhas e comportamentos reincidentes.
+
+---
+
+## 📈 Estratégias de Análise
+
+As análises previstas para o decorrer do projeto incluem:
+
+- 🤖 Previsão de falhas em produtos (**análise preditiva**)  
+- 🗺 Análise semanal de OSs por **localidade**  
+- 🚦 Análise de **status** das OSs  
+- 🔥 Análise por **prioridade** *(a definir)*  
+
+---
+
+## 🛠 Tecnologias Utilizadas
+
+### ⚙️ Back-End
+
+- 🐍 Python  
+- ⚡ FastAPI  
+- 🐳 Docker  
+
+### 🖥 Front-End
+
+- 🅰️ Angular  
+- 🌐 .NET  
+
+---
+
+## 🗓 Sprints
+
+### 🏁 Sprint
