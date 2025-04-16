@@ -56,3 +56,15 @@ As análises previstas para o decorrer do projeto incluem:
 ## 🗓 Sprints
 
 ### 🏁 Sprint
+
+- Criação de um protótipo para o front.
+- Ideias para realização das análises
+## Plano A:
+
+- Receber os dados através de um csv disponibilizado pela fast.
+- Realizar a exploração de dados desse arquivo
+
+## Plano B:
+
+- Criação de dados inventados para servirem de base para criação da análise.
+
