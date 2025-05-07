@@ -1,0 +1,30 @@
+services:
+    db:
+        image: postgres:16.4
+        container_name: postgres_db
+        restart: always
+        environment:
+            POSTGRES_USER: admin
+            POSTGRES_PASSWORD: senha123
+            POSTGRES_DB: cassino_db
+        ports:
+            - "5432:5432"
+        volumes:
+            - postgres_data:/var/lib/postgresql/data
+    api:
+        build: 
+            context: ./Backend/cassino-backend
+        container_name: fastapi_app
+        restart: always
+        depends_on:
+            - db
+        environment:
+            - DB_USER=admin
+            - DB_PASSWORD=senha123
+            - DB_HOST=db
+            - DB_PORT=5432
+            - DB_NAME=cassino_db
+        ports:
+            - "8000:8000"
+        command: uvicorn src.main:app --host 0.0.0.0 --port 8000 --reload
+
