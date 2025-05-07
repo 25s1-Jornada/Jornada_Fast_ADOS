@@ -6,7 +6,7 @@ class OS(Base):
 
     id = Column(Integer, primary_key=True, index=True)
     solicitante = Column(String, unique=True, index=True)
-    data = Column(Float, default=100.0)
+    data = Column(String)
     servico = Column(String)
     valor = Column(Integer)
     status = Column(String)
