@@ -21,7 +21,7 @@ AsyncSessionLocal = sessionmaker(
 # Base para os modelos do SQLAlchemy
 Base = declarative_base()
 
-from Backend.models.OS import OS
+from src.models.OS import OS
 
 # Função para criar as tabelas no banco de dados ao iniciar a aplicação
 async def init_db():

@@ -15,6 +15,6 @@ async def get_db():
     finally:
        await db.close()
 
-@router.get("/bets")
+@router.get("/Analise")
 async def list_bets(AsyncSession = Depends(get_db)):
     return [1]
