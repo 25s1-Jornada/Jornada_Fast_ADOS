@@ -7,6 +7,8 @@ from src.services.analise import create_OS
 from datetime import datetime
 import pandas as pd
 from io import StringIO
+import traceback
+from sqlalchemy.exc import IntegrityError
 
 router = APIRouter(prefix="/OS")
 
@@ -42,58 +44,62 @@ async def analise_tendencia(db: AsyncSession = Depends(get_db)):
     result = await db.execute(select(OS))
     ordens = result.scalars().all()
 
-    if not ordens:
-        return {"mensagem": "Nenhuma OS encontrada para análise."}
-
-    os_data = [
-        {
-            "id": os.id,
-            "solicitante": os.solicitante,
-            "data": os.data,
-            "servico": os.servico,
-            "valor": os.valor,
-            "status": os.status,
-            "numserie": os.numserie
-        }
-        for os in ordens
-    ]
-
-    df = pd.DataFrame(os_data)
-    df["data"] = pd.to_datetime(df["data"])
-    df["mes"] = df["data"].dt.to_period("M").astype(str)
-    tendencia = df.groupby("mes").agg(qtd_OS=("id", "count"), total_valor=("valor", "sum")).reset_index()
-
-    return {"tendencia_OS": tendencia.to_dict(orient="records")}
-
-@router.post("/upload_csv")
+@router.post("/upload_csv") 
 async def upload_os_csv(file: UploadFile = File(...), db: AsyncSession = Depends(get_db)):
     if not file.filename.endswith(".csv"):
         raise HTTPException(status_code=400, detail="O arquivo deve ser um CSV.")
 
     try:
         content = await file.read()
-        df = pd.read_csv(StringIO(content.decode("utf-8")))
+        df = pd.read_csv(StringIO(content.decode("latin-1")), sep=";")
+        df.columns = df.columns.str.strip().str.lower()
 
         required_columns = {"solicitante", "data", "servico", "valor", "status", "numserie"}
         if not required_columns.issubset(df.columns):
             raise HTTPException(status_code=400, detail=f"CSV deve conter as colunas: {required_columns}")
 
+        # Converte a coluna data
         df["data"] = pd.to_datetime(df["data"], errors="coerce")
         df = df.dropna(subset=["data"])
 
-        for _, row in df.iterrows():
-            os = OS(
-                solicitante=row["solicitante"],
-                data=row["data"].date(),
-                servico=row["servico"],
-                valor=row["valor"],
-                status=row["status"],
-                numserie=row["numserie"]
-            )
-            db.add(os)
+        erros = []
+        for i, row in df.iterrows():
+            try:
+                print(f"Processando linha {i}: {row.to_dict()}")
 
-        await db.commit()
+                os = OS(
+                    solicitante=str(row["solicitante"]),
+                    data=row["data"].strftime("%Y-%m-%d"),  # salva como string no modelo
+                    servico=str(row["servico"]),
+                    valor=int(float(row["valor"])),  # força conversão
+                    status=str(row["status"]),
+                    numserie=str(row["numserie"])
+                )
+                db.add(os)
+
+            except Exception as e:
+                print(f"Erro ao processar linha {i}: {e}")
+                traceback.print_exc()
+                erros.append({"linha": i, "erro": str(e)})
+
+        try:
+            await db.commit()
+        except IntegrityError as e:
+            await db.rollback()
+            print("Erro de integridade ao salvar no banco:", e)
+            traceback.print_exc()
+            raise HTTPException(status_code=500, detail="Erro ao salvar dados no banco. Verifique duplicatas ou restrições.")
+
+        if erros:
+            return {
+                "message": f"{len(df) - len(erros)} ordens de serviço inseridas com sucesso.",
+                "erros": erros
+            }
+
         return {"message": f"{len(df)} ordens de serviço inseridas com sucesso."}
 
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        print("Erro inesperado no upload:", e)
+        traceback.print_exc()
+        raise HTTPException(status_code=500, detail="Erro interno ao processar o arquivo CSV.")
+
