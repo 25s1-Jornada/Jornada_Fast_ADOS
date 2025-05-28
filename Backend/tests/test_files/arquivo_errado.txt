@@ -1,0 +1,2 @@
+Esse não é um CSV válido!
+Ele tem apenas texto sem colunas estruturadas.

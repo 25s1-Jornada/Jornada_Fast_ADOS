@@ -1,0 +1,3 @@
+solicitante,data,servico,valor,status,numserie
+Cliente A,"2025-05-28","Reparo","cinquenta","Concluído","123456"
+Cliente B,"2025-05-27","Manutenção",-300,"Em andamento","789012"
