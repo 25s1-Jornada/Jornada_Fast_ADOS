@@ -9,6 +9,7 @@ import pandas as pd
 from io import StringIO
 import traceback
 from sqlalchemy.exc import IntegrityError
+from collections import Counter
 
 router = APIRouter(prefix="/OS")
 
@@ -43,6 +44,43 @@ async def create_os_endpoint(
 async def analise_tendencia(db: AsyncSession = Depends(get_db)):
     result = await db.execute(select(OS))
     ordens = result.scalars().all()
+
+    if not ordens:
+        return {"message": "Nenhuma ordem de serviço encontrada."}
+
+    # Converte os dados para DataFrame
+    data = [{
+        "data": os.data,
+        "valor": os.valor,
+        "servico": os.servico,
+        "status": os.status
+    } for os in ordens]
+
+    df = pd.DataFrame(data)
+
+    # Converte "data" para datetime
+    df["data"] = pd.to_datetime(df["data"], errors="coerce")
+    df = df.dropna(subset=["data"])
+    df["mes"] = df["data"].dt.to_period("M").astype(str)  # Ex: "2024-05"
+
+    # Tendência de quantidade por mês
+    qtd_por_mes = df.groupby("mes").size().to_dict()
+
+    # Tendência de valor total por mês
+    valor_total_mes = df.groupby("mes")["valor"].sum().to_dict()
+
+    # Status mais comuns
+    status_mais_comuns = Counter(df["status"]).most_common()
+
+    # (Opcional) Tendência por serviço
+    servicos_mais_comuns = Counter(df["servico"]).most_common()
+
+    return {
+        "quantidade_por_mes": qtd_por_mes,
+        "valor_total_por_mes": valor_total_mes,
+        "status_mais_comuns": status_mais_comuns,
+        "servicos_mais_comuns": servicos_mais_comuns
+    }
 
 @router.post("/upload_csv") 
 async def upload_os_csv(file: UploadFile = File(...), db: AsyncSession = Depends(get_db)):
