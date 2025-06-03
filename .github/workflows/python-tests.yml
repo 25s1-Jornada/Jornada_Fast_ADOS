@@ -21,7 +21,7 @@ jobs:
         with:
           python-version: '3.10'
 
-      - name: List files for debug
+      - name: List files at root
         run: ls -R
 
       - name: Install dependencies
