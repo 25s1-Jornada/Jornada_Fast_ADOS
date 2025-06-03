@@ -19,7 +19,8 @@ def test_upload_csv_valido():
     print("✅ Resposta API (Upload Válido):", response.status_code, response.json())
 
     assert response.status_code == 200
-    assert "ordens de serviço inseridas com sucesso" in response.json()["message"]
+    assert "OS inseridas com sucesso" in response.json()["message"]
+
 
 # 🔴 Teste de upload com colunas erradas
 def test_upload_csv_colunas_erradas():
