@@ -31,6 +31,7 @@ jobs:
 
       - name: Run backend tests
         env:
-          PYTHONPATH: ${{ github.workspace }}
+          PYTHONPATH: ${{ github.workspace }}/src
         run: |
           python -m pytest Backend/tests/
+
