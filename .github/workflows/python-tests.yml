@@ -31,4 +31,5 @@ jobs:
 
       - name: Run backend tests
         run: |
-          pytest Backend/tests/
+          python -m pytest Backend/tests/
+
