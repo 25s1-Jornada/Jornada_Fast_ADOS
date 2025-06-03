@@ -1,3 +1,0 @@
-cod tecnico,cod vendedor,despesa materiais,cod peca defeito,valor total,n serie,categoria defeito,cod peca nova,custo km,custo deslocamento,data primeira visita,categoria chamado,peca defeito,data segunda visita,custo materiais,custo hr,cod cliente,observacao chamado,qtd materiais
-T123,V001,50.0,P001,300.0,SN123456,Categoria A,P002,20.0,30.0,2024-06-01,Categoria X,Peça X,2024-06-02,50.0,100.0,C123,Observação qualquer,2
-T124,V002,60.0,P002,400.0,SN654321,Categoria B,P003,25.0,35.0,2024-06-03,Categoria Y,Peça Y,2024-06-04,60.0,120.0,C124,Outra observação,3
