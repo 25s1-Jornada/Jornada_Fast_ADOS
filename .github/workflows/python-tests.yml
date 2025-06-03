@@ -31,4 +31,4 @@ jobs:
 
       - name: Run backend tests
         run: |
-          pytest jornada_fast_ados/backend/tests/
+          pytest /backend/tests/
