@@ -12,21 +12,6 @@ jobs:
   test-backend:
     runs-on: ubuntu-latest
 
-    services:
-      postgres:
-        image: postgres:15
-        ports:
-          - 5432:5432
-        env:
-          POSTGRES_USER: testuser
-          POSTGRES_PASSWORD: testpass
-          POSTGRES_DB: testdb
-        options: >-
-          --health-cmd pg_isready
-          --health-interval 10s
-          --health-timeout 5s
-          --health-retries 5
-
     steps:
       - name: Checkout repo
         uses: actions/checkout@v3
@@ -44,7 +29,5 @@ jobs:
       - name: Run backend tests
         env:
           PYTHONPATH: ${{ github.workspace }}/Backend
-          DATABASE_URL: postgresql+psycopg2://testuser:testpass@localhost:5432/testdb
         run: |
-          echo "🔧 Rodando testes com DATABASE_URL=$DATABASE_URL"
           python -m pytest Backend/tests/
