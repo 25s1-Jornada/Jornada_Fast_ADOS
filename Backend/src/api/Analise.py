@@ -88,6 +88,18 @@ async def create_os_endpoint(
     "cod_peca_nova": new_os.cod_peca_nova
     }
 
+from fastapi import APIRouter, Query, Depends, HTTPException
+from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.future import select
+import pandas as pd
+import numpy as np
+from collections import Counter
+from sklearn.linear_model import LinearRegression
+from .dependencies import get_db  # ajuste conforme seu projeto
+from .models import OS  # ajuste conforme seu projeto
+
+router = APIRouter()
+
 @router.get("/analise")
 async def analise_tendencia(
     ano: int = Query(..., ge=2000, le=2100), 
@@ -100,7 +112,7 @@ async def analise_tendencia(
     if not ordens:
         raise HTTPException(status_code=404, detail="Nenhuma ordem de serviço encontrada.")
 
-    # Extrai os dados para DataFrame
+    # Extrair dados
     data = []
     for os in ordens:
         data.append({
@@ -114,49 +126,70 @@ async def analise_tendencia(
     df = pd.DataFrame(data)
     df["data_primeira_visita"] = pd.to_datetime(df["data_primeira_visita"], errors="coerce")
     df = df.dropna(subset=["data_primeira_visita"])
+    df["cod_peca_defeito"] = df["cod_peca_defeito"].astype(str).str.zfill(13)
 
-    # 🔍 Filtro por ano e mês
-    df = df[(df["data_primeira_visita"].dt.year == ano) & (df["data_primeira_visita"].dt.month == mes)]
-
-    if df.empty:
-        raise HTTPException(status_code=404, detail="Nenhuma ordem de serviço encontrada para o ano e mês fornecidos.")
-
+    # Extrair partes do código da peça
+    df["modelo_ilha"] = df["cod_peca_defeito"].str[:3]
+    df["data_fabricacao"] = df["cod_peca_defeito"].str[3:7]
+    df["seq_fabricacao"] = df["cod_peca_defeito"].str[7:11]
+    df["tipo_gas"] = df["cod_peca_defeito"].str[11:12]
+    df["tipo_compressor"] = df["cod_peca_defeito"].str[12:13]
+    df["codigo_lote"] = df["cod_peca_defeito"].str[:11]
     df["mes"] = df["data_primeira_visita"].dt.to_period("M").astype(str)
 
-    # Tendência de quantidade por mês
-    qtd_por_mes = df.groupby("mes").size().to_dict()
+    # Filtrar pelo ano e mês
+    df_mes = df[
+        (df["data_primeira_visita"].dt.year == ano) & 
+        (df["data_primeira_visita"].dt.month == mes)
+    ]
 
-    # Tendência de valor total por mês
-    valor_total_mes = df.groupby("mes")["valor_total"].sum().to_dict()
+    if df_mes.empty:
+        raise HTTPException(status_code=404, detail="Nenhuma ordem de serviço encontrada para o ano e mês fornecidos.")
 
-    # Categorias de defeito mais comuns
-    categoria_defeitos_mais_comuns = Counter(df["categoria_defeito"].dropna()).most_common()
+    # Estatísticas gerais do mês
+    qtd_por_mes = df_mes.groupby("mes").size().to_dict()
+    valor_total_mes = df_mes.groupby("mes")["valor_total"].sum().to_dict()
+    categoria_defeitos_mais_comuns = Counter(df_mes["categoria_defeito"].dropna()).most_common()
+    pecas_defeito_mais_comuns = Counter(df_mes["peca_defeito"].dropna()).most_common()
 
-    # Peças com maior ocorrência de defeitos
-    pecas_defeito_mais_comuns = Counter(df["peca_defeito"].dropna()).most_common()
-
-    # 🔮 Previsão de peças que podem estragar
-    df_peça_mes = df.dropna(subset=["mes", "peca_defeito"])
+    # Previsão por modelo + tipo_gas + tipo_compressor
     forecast = {}
+    df_forecast = df.dropna(subset=["mes", "modelo_ilha", "tipo_gas", "tipo_compressor"])
 
-    for peca, grupo in df_peça_mes.groupby("peca_defeito"):
-        contagem_mes = grupo.groupby("mes").size().sort_index()
-        if len(contagem_mes) >= 3:
-            X = np.arange(len(contagem_mes)).reshape(-1, 1)
-            y = contagem_mes.values
+    for chave, grupo in df_forecast.groupby(["modelo_ilha", "tipo_gas", "tipo_compressor"]):
+        contagem = grupo.groupby("mes").size().sort_index()
+        if len(contagem) >= 3:
+            X = np.arange(len(contagem)).reshape(-1, 1)
+            y = contagem.values
             model = LinearRegression().fit(X, y)
-            next_month = np.array([[len(contagem_mes)]])
-            predicted = model.predict(next_month)[0]
+            predicted = model.predict(np.array([[len(contagem)]]))[0]
             if predicted >= 1:
-                forecast[peca] = round(predicted)
+                forecast_key = f"Modelo {chave[0]} | Gás {chave[1]} | Compressor {chave[2]}"
+                forecast[forecast_key] = round(predicted)
+
+    # Previsão por lote
+    forecast_lotes = {}
+    df_lotes = df.dropna(subset=["mes", "codigo_lote"])
+
+    for lote, grupo in df_lotes.groupby("codigo_lote"):
+        contagem = grupo.groupby("mes").size().sort_index()
+        if len(contagem) >= 3:
+            X = np.arange(len(contagem)).reshape(-1, 1)
+            y = contagem.values
+            model = LinearRegression().fit(X, y)
+            predicted = model.predict(np.array([[len(contagem)]]))[0]
+            if predicted >= 1:
+                forecast_lotes[lote] = round(predicted)
 
     return {
         "quantidade_por_mes": qtd_por_mes,
         "valor_total_por_mes": valor_total_mes,
         "categoria_defeitos_mais_comuns": categoria_defeitos_mais_comuns,
         "pecas_defeito_mais_comuns": pecas_defeito_mais_comuns,
-        "previsao_pecas_com_risco": forecast
+        "previsao_modelos_em_risco": forecast,
+        "lotes_com_risco": forecast_lotes
     }
+
 
 @router.post("/upload_csv")
 async def upload_os_csv(file: UploadFile = File(...), db: AsyncSession = Depends(get_db)):
