@@ -1,33 +1,72 @@
-name: Run Backend Python Tests
+# .github/workflows/ci.yml
+name: CI/CD Backend Tests
 
 on:
   push:
     branches:
-      - testes
+      - main
   pull_request:
     branches:
       - main
 
 jobs:
-  test-backend:
-    runs-on: ubuntu-latest
+  build-and-test:
+    runs-on: ubuntu-latest # O sistema operacional onde o job será executado
 
     steps:
-      - name: Checkout repo
-        uses: actions/checkout@v3
+    - name: Checkout code # Passo para clonar o código do repositório
+      uses: actions/checkout@v4
 
-      - name: Setup Python
-        uses: actions/setup-python@v4
-        with:
-          python-version: '3.10'
+    - name: Set up Docker Compose # Confirma que o Docker Compose está disponível
+      run: |
+        docker-compose version
 
-      - name: Install dependencies
-        run: |
-          python -m pip install --upgrade pip
-          pip install -r Backend/requirements.txt
+    - name: Build and run Docker containers # Constrói e inicia os serviços Docker
+      # O working-directory é importante para que o docker-compose.yml seja encontrado
+      # Assumimos que seu docker-compose.yml está na pasta 'backend/'
+      run: docker-compose -f docker-compose.yml up --build -d
+      working-directory: ./backend 
 
-      - name: Run backend tests
-        env:
-          PYTHONPATH: ${{ github.workspace }}/Backend
-        run: |
-          python -m pytest Backend/tests/
+    - name: Wait for PostgreSQL to be ready # Espera o banco de dados estar pronto
+      # Isso é crucial, pois 'depends_on' no docker-compose.yml apenas garante a ordem de início, não a prontidão.
+      run: |
+        echo "Waiting for PostgreSQL to be ready..."
+        # Tenta conectar ao DB dentro do container 'postgres_db'
+        # O 'localhost' aqui se refere ao serviço de DB dentro do próprio container 'postgres_db'
+        # Os parâmetros -U admin -d Fast_ADOS vêm do seu docker-compose.yml
+        for i in $(seq 1 60); do # Tenta por até 60 segundos (ajuste se seu DB demorar mais)
+          docker exec postgres_db pg_isready -h localhost -p 5432 -U admin -d Fast_ADOS && break
+          echo "PostgreSQL not ready yet. Retrying in 1 second..."
+          sleep 1
+        done
+        # Se após o loop o DB ainda não estiver pronto, falha o job
+        if ! docker exec postgres_db pg_isready -h localhost -p 5432 -U admin -d Fast_ADOS; then
+          echo "PostgreSQL did not become ready in time."
+          exit 1
+        fi
+        echo "PostgreSQL is ready!"
+      working-directory: ./backend # Executa este comando na pasta 'backend/'
+
+    - name: Set up Python # Configura o ambiente Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.13' # Usa a mesma versão do Python que você usa localmente
+
+    - name: Install Python dependencies # Instala as dependências do Python
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt # Instala as dependências do seu requirements.txt
+      working-directory: ./backend # Executa na pasta 'backend/'
+
+    - name: Run tests # Executa os testes Pytest
+      # As variáveis de ambiente são definidas aqui para que o código Python nos testes
+      # saiba como se conectar ao DB que está no container Docker.
+      # 'localhost' é usado porque os testes rodam no ambiente do GitHub Actions (o "host" para os containers).
+      env:
+        DB_USER: admin
+        DB_PASSWORD: senha123
+        DB_HOST: localhost # Para os testes rodando no ambiente do GitHub Actions, 'localhost' aponta para a porta mapeada do container.
+        DB_PORT: 5432
+        DB_NAME: Fast_ADOS
+      run: pytest tests/test_upload_csv.py # Roda o arquivo de teste específico
+      working-directory: ./backend # Executa na pasta 'backend/'
