@@ -6,7 +6,7 @@ from src.models.OS import OS
 from src.services.analise import create_OS
 from datetime import datetime, date
 import pandas as pd
-from io import StringIO
+from io import StringIO, BytesIO 
 import traceback
 from sqlalchemy.exc import IntegrityError
 from collections import Counter
@@ -19,7 +19,7 @@ router = APIRouter(prefix="/OS")
 async def get_db() -> AsyncSession:
     async with AsyncSessionLocal() as session:
         yield session
-
+'''
 @router.post("/newOS")
 async def create_os_endpoint(
     id: int,
@@ -87,10 +87,10 @@ async def create_os_endpoint(
     "cod_peca_defeito": new_os.cod_peca_defeito,
     "cod_peca_nova": new_os.cod_peca_nova
     }
+'''
 
 
-
-router = APIRouter()
+#router = APIRouter()
 
 @router.get("/analise")
 async def analise_tendencia(
@@ -102,53 +102,44 @@ async def analise_tendencia(
     ordens = result.scalars().all()
 
     if not ordens:
-        raise HTTPException(status_code=404, detail="Nenhuma ordem de serviço encontrada.")
+        raise HTTPException(status_code=404, detail="Nenhuma ordem encontrada.")
 
     # Extrair dados
     data = []
     for os in ordens:
         data.append({
-            "data_primeira_visita": os.data_primeira_visita,
-            "valor_total": os.valor_total,
-            "categoria_defeito": os.categoria_defeito,
-            "peca_defeito": os.peca_defeito,
-            "cod_peca_defeito": os.cod_peca_defeito,
+            "data_emissao_nf": os.data_emissao_nf,
+            "dt_fabricacao": os.data_fabricacao,
+            "causa": os.causa,
+            "item": os.item,
         })
 
     df = pd.DataFrame(data)
-    df["data_primeira_visita"] = pd.to_datetime(df["data_primeira_visita"], errors="coerce")
-    df = df.dropna(subset=["data_primeira_visita"])
-    df["cod_peca_defeito"] = df["cod_peca_defeito"].astype(str).str.zfill(13)
+    df["data_emissao_nf"] = pd.to_datetime(df["data_emissao_nf"], errors="coerce")
+    df = df.dropna(subset=["data_emissao_nf"])
+    
+    # Criar coluna "mes" para análise temporal
+    df["mes"] = df["data_emissao_nf"].dt.to_period("M").astype(str)
 
-    # Extrair partes do código da peça
-    df["modelo_ilha"] = df["cod_peca_defeito"].str[:3]
-    df["data_fabricacao"] = df["cod_peca_defeito"].str[3:7]
-    df["seq_fabricacao"] = df["cod_peca_defeito"].str[7:11]
-    df["tipo_gas"] = df["cod_peca_defeito"].str[11:12]
-    df["tipo_compressor"] = df["cod_peca_defeito"].str[12:13]
-    df["codigo_lote"] = df["cod_peca_defeito"].str[:11]
-    df["mes"] = df["data_primeira_visita"].dt.to_period("M").astype(str)
-
-    # Filtrar pelo ano e mês
+    # Filtro por ano e mês
     df_mes = df[
-        (df["data_primeira_visita"].dt.year == ano) & 
-        (df["data_primeira_visita"].dt.month == mes)
+        (df["data_emissao_nf"].dt.year == ano) & 
+        (df["data_emissao_nf"].dt.month == mes)
     ]
 
     if df_mes.empty:
-        raise HTTPException(status_code=404, detail="Nenhuma ordem de serviço encontrada para o ano e mês fornecidos.")
+        raise HTTPException(status_code=404, detail="Nenhum registro encontrado para o ano e mês fornecidos.")
 
-    # Estatísticas gerais do mês
+    # Estatísticas
     qtd_por_mes = df_mes.groupby("mes").size().to_dict()
-    valor_total_mes = df_mes.groupby("mes")["valor_total"].sum().to_dict()
-    categoria_defeitos_mais_comuns = Counter(df_mes["categoria_defeito"].dropna()).most_common()
-    pecas_defeito_mais_comuns = Counter(df_mes["peca_defeito"].dropna()).most_common()
+    causa_mais_comum = Counter(df_mes["causa"].dropna()).most_common()
+    item_mais_comum = Counter(df_mes["item"].dropna()).most_common()
 
-    # Previsão por modelo + tipo_gas + tipo_compressor
+    # Tendência de falhas por item ao longo do tempo
     forecast = {}
-    df_forecast = df.dropna(subset=["mes", "modelo_ilha", "tipo_gas", "tipo_compressor"])
+    df_forecast = df.dropna(subset=["mes", "item"])
 
-    for chave, grupo in df_forecast.groupby(["modelo_ilha", "tipo_gas", "tipo_compressor"]):
+    for item, grupo in df_forecast.groupby("item"):
         contagem = grupo.groupby("mes").size().sort_index()
         if len(contagem) >= 3:
             X = np.arange(len(contagem)).reshape(-1, 1)
@@ -156,81 +147,53 @@ async def analise_tendencia(
             model = LinearRegression().fit(X, y)
             predicted = model.predict(np.array([[len(contagem)]]))[0]
             if predicted >= 1:
-                forecast_key = f"Modelo {chave[0]} | Gás {chave[1]} | Compressor {chave[2]}"
-                forecast[forecast_key] = round(predicted)
-
-    # Previsão por lote
-    forecast_lotes = {}
-    df_lotes = df.dropna(subset=["mes", "codigo_lote"])
-
-    for lote, grupo in df_lotes.groupby("codigo_lote"):
-        contagem = grupo.groupby("mes").size().sort_index()
-        if len(contagem) >= 3:
-            X = np.arange(len(contagem)).reshape(-1, 1)
-            y = contagem.values
-            model = LinearRegression().fit(X, y)
-            predicted = model.predict(np.array([[len(contagem)]]))[0]
-            if predicted >= 1:
-                forecast_lotes[lote] = round(predicted)
+                forecast[item] = round(predicted)
 
     return {
         "quantidade_por_mes": qtd_por_mes,
-        "valor_total_por_mes": valor_total_mes,
-        "categoria_defeitos_mais_comuns": categoria_defeitos_mais_comuns,
-        "pecas_defeito_mais_comuns": pecas_defeito_mais_comuns,
-        "previsao_modelos_em_risco": forecast,
-        "lotes_com_risco": forecast_lotes
+        "causas_mais_comuns": causa_mais_comum,
+        "itens_mais_comuns": item_mais_comum,
+        "previsao_itens_em_risco": forecast
     }
 
 
-@router.post("/upload_csv")
-async def upload_os_csv(file: UploadFile = File(...), db: AsyncSession = Depends(get_db)):
-    if not file.filename.endswith(".csv"):
-        raise HTTPException(status_code=400, detail="O arquivo deve ser um CSV.")
+@router.post("/upload_xlsx")
+async def upload_os_xlsx(file: UploadFile = File(...), db: AsyncSession = Depends(get_db)):
+    if not file.filename.endswith(".xlsx"):
+        raise HTTPException(status_code=400, detail="O arquivo deve ser um XLSX.")
 
     try:
         content = await file.read()
-        df = pd.read_csv(StringIO(content.decode("utf-8")), sep=",")
+        df = pd.read_excel(BytesIO(content))
         df.columns = df.columns.str.strip().str.lower()
 
         required_columns = {
-            "cod cliente", "cod tecnico", "cod vendedor", "n serie", "categoria chamado",
-            "observacao chamado", "custo deslocamento", "custo hr", "custo km",
-            "data primeira visita", "data segunda visita", "despesa materiais",
-            "qtd materiais", "custo materiais", "valor total", "categoria defeito",
-            "peca defeito", "cod peca defeito", "cod peca nova"
+            "nrchamado", "codcliente", "nomecliente", "cidade", "estado",
+            "nrserie", "item", "dtfabricacao", "dtemissão nf", "tipo", "causa", "observacao"
         }
 
         if not required_columns.issubset(df.columns):
             raise HTTPException(
                 status_code=400,
-                detail=f"CSV deve conter as colunas: {required_columns}"
+                detail=f"XLSX deve conter as colunas: {required_columns}"
             )
 
         erros = []
         for i, row in df.iterrows():
             try:
                 os = OS(
-#                    id=int(row["id"]),
-                    cod_cliente=str(row["cod cliente"]),
-                    cod_tecnico=str(row["cod tecnico"]),
-                    cod_vendedor=str(row["cod vendedor"]),
-                    numserie=str(row["n serie"]),
-                    categoria_chamado=str(row["categoria chamado"]),
-                    observacao_chamado=str(row["observacao chamado"]),
-                    custo_deslocamento=float(row["custo deslocamento"]),
-                    custo_hr=float(row["custo hr"]),
-                    custo_km=float(row["custo km"]),
-                    data_primeira_visita=datetime.strptime(str(row["data primeira visita"]), "%Y-%m-%d").date(),
-                    data_segunda_visita=datetime.strptime(str(row["data segunda visita"]), "%Y-%m-%d").date(),
-                    despesa_materiais=float(row["despesa materiais"]),
-                    qtd_materiais=int(row["qtd materiais"]),
-                    custo_materiais=float(row["custo materiais"]),
-                    valor_total=float(row["valor total"]),
-                    categoria_defeito=str(row["categoria defeito"]),
-                    peca_defeito=str(row["peca defeito"]),
-                    cod_peca_defeito=str(row["cod peca defeito"]),
-                    cod_peca_nova=str(row["cod peca nova"])
+                    numero_chamado=str(row["nrchamado"]),
+                    cod_cliente=str(row["codcliente"]),
+                    nome_cliente=str(row["nomecliente"]),
+                    cidade=str(row["cidade"]),
+                    estado=str(row["estado"]),
+                    numserie=str(row["nrserie"]),
+                    item=str(row["item"]),
+                    data_fabricacao=pd.to_datetime(row["dtfabricacao"]).date() if not pd.isna(row["dtfabricacao"]) else None,
+                    data_emissao_nf=pd.to_datetime(row["dtemissão nf"]).date() if not pd.isna(row["dtemissão nf"]) else None,
+                    tipo=str(row["tipo"]),
+                    causa=str(row["causa"]),
+                    observacao=str(row["observacao"])
                 )
                 db.add(os)
 
@@ -240,19 +203,19 @@ async def upload_os_csv(file: UploadFile = File(...), db: AsyncSession = Depends
 
         try:
             await db.commit()
-        except IntegrityError as e:
+        except IntegrityError:
             await db.rollback()
             traceback.print_exc()
-            raise HTTPException(status_code=500, detail="Erro de integridade ao salvar no banco. Verifique duplicatas ou chaves únicas.")
+            raise HTTPException(status_code=500, detail="Erro de integridade ao salvar no banco.")
 
         if erros:
             return {
-                "message": f"{len(df) - len(erros)} OS inseridas com sucesso.",
+                "message": f"{len(df) - len(erros)} registros inseridos com sucesso.",
                 "erros": erros
             }
 
-        return {"message": f"{len(df)} OS inseridas com sucesso."}
+        return {"message": f"{len(df)} registros inseridos com sucesso."}
 
-    except Exception as e:
+    except Exception:
         traceback.print_exc()
-        raise HTTPException(status_code=500, detail="Erro interno ao processar o arquivo CSV.")
+        raise HTTPException(status_code=500, detail="Erro interno ao processar o arquivo XLSX.")

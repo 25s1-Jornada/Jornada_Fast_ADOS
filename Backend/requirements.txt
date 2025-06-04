@@ -6,3 +6,4 @@ pandas
 asyncpg
 python-multipart
 scikit-learn
+openpyxl
