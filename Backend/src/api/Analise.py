@@ -88,15 +88,7 @@ async def create_os_endpoint(
     "cod_peca_nova": new_os.cod_peca_nova
     }
 
-from fastapi import APIRouter, Query, Depends, HTTPException
-from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy.future import select
-import pandas as pd
-import numpy as np
-from collections import Counter
-from sklearn.linear_model import LinearRegression
-from .dependencies import get_db  # ajuste conforme seu projeto
-from .models import OS  # ajuste conforme seu projeto
+
 
 router = APIRouter()
 
