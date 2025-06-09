@@ -53,7 +53,6 @@ class OS(Base):
     data = Column(Date)	
     numero_chamado	= Column(String)
     cod_cliente	= Column(String)
-#    Nome = Column(String)
     nome_cliente	= Column(String)
     cidade	= Column(String)
     estado	= Column(String)
