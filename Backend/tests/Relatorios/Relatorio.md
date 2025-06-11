@@ -24,7 +24,7 @@ O objetivo dos testes foi validar o funcionamento da API no **upload de arquivos
 - **Alternativa:** Realizado o teste manual no Swagger e 400 conforme esperado.
 
 ---
-
+a
 ### **Teste 3 – Upload de Arquivo que Não é CSV**
 - **Arquivo usado:** `arquivo_errado.txt`
 - **Objetivo:** Tentar enviar um **arquivo que não seja CSV** para testar a validação.
