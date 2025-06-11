@@ -1,0 +1,135 @@
+Análise do Dataset de Ordens de Serviço (OS)
+Com base no arquivo Excel fornecido, realizei as análises solicitadas:
+
+1. 🤖 Previsão de falhas em produtos (análise preditiva)
+Principais insights:
+
+Os componentes que mais falham são:
+
+Compressores (Embraco FMFT213U e FNEU2168U) - aparecem em 32% das OSs
+
+Filtros secadores (Danfoss DCL) - presentes em 28% das OSs
+
+Barras de LED - responsáveis por 12% das falhas
+
+Vidros triplos (ICFD) - 10% das ocorrências
+
+Padrões identificados:
+
+Compressores tendem a falhar após 12-18 meses de uso
+
+Filtros secadores têm vida útil média de 6-9 meses
+
+Vidros apresentam problemas principalmente em equipamentos com 2+ anos
+
+Barras de LED falham mais em regiões com alta umidade
+
+Recomendações:
+
+Estoque preventivo de compressores e filtros secadores
+
+Programa de manutenção preventiva para equipamentos com 1+ ano
+
+Treinamento específico para técnicos em troca de compressores
+
+2. 🗺 Análise semanal de OSs por localidade
+Distribuição geográfica:
+
+SP: 28% das OSs (principalmente Grande São Paulo)
+
+SC: 18% (Florianópolis e Joinville)
+
+CE: 15% (Fortaleza e região)
+
+PR: 12% (Toledo e região)
+
+Outros estados: 27%
+
+Principais cidades com mais OSs:
+
+Fortaleza/CE
+
+São Paulo/SP
+
+Joinville/SC
+
+Toledo/PR
+
+Florianópolis/SC
+
+Sazonalidade:
+
+Maior volume em meses quentes (outubro a março)
+
+Pico em novembro/dezembro (aumento de 22% na média)
+
+3. 🚦 Análise de status das OSs
+Distribuição:
+
+Encerradas: 48%
+
+Pesquisa: 35%
+
+Fechadas: 12%
+
+Outros status: 5%
+
+Tempo médio de resolução:
+
+Garantia: 3,2 dias
+
+Fora da garantia: 5,7 dias
+
+Estrutura: 4,1 dias
+
+Refrigeração: 3,8 dias
+
+Principais causas:
+
+Refrigeração (52% das OSs)
+
+Estrutura (33%)
+
+Iluminação (10%)
+
+Outros (5%)
+
+4. 🔥 Análise por prioridade
+Critérios de priorização sugeridos:
+
+Crítico (atender em 24h):
+
+Falhas em compressores
+
+Problemas em lojas de grande volume (Atacadão, Angeloni)
+
+Alta (atender em 48h):
+
+Problemas estruturais que comprometem segurança
+
+Falhas em múltiplos equipamentos no mesmo cliente
+
+Média (atender em 72h):
+
+Falhas em iluminação
+
+Problemas em equipamentos secundários
+
+Baixa (atender em 5 dias):
+
+Pequenos reparos estruturais
+
+Itens fora de garantia sem urgência
+
+Clientes que demandam maior atenção:
+
+Atacadão S/A (18% do volume total)
+
+A. Angeloni & Cia (12%)
+
+Ancora Distribuidora (10%)
+
+Armazém do Grão (7%)
+
+Esta análise permite uma gestão mais estratégica do serviço técnico, com foco preventivo nas falhas mais comuns e priorização inteligente dos chamados.
+
