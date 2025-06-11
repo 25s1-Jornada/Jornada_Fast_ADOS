@@ -16,7 +16,7 @@ async def test_create_os(session: AsyncSession):
         "cod_cliente": "CLI001",
         "cod_tecnico": "TEC001",
         "cod_vendedor": "VND001", # Adicionando valor para todos os campos não nulos
-        "numserie": "SN12345", # CORRIGIDO: Agora 'numserie'
+        "numserie": "SN12345", 
         "categoria_chamado": "Manutencao",
         "observacao_chamado": "Verificacao geral do equipamento", # Adicionando valor
         "custo_deslocamento": 50.0,
