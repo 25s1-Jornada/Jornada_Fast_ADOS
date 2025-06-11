@@ -1,4 +1,4 @@
-import { SmallVallueCard } from "../card";
+import { SmallVallueCard } from "./card";
 import * as S from "./styles";
 
 export function SummaryCards() {

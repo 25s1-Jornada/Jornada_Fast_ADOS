@@ -1,9 +1,16 @@
 import { SummaryCards } from  '@/sections/summary-cards'
+import { SummarySharts } from '@/sections/summary-charts'
 
-import * as S from '@/base-page'
+import * as S from '@/pages/home'
 
 export default function Home() {
   return (
-        <SummaryCards/>
+   <>
+      <S.HomePage>
+          <SummaryCards/>
+          <SummarySharts/>
+      </S.HomePage>
+   </>
+ 
   );
 }
