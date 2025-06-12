@@ -9,7 +9,7 @@ export const HomePage = styled.section`
     }
 
     body {
-        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        font-family:  sans-serif;
         background-color: #f5f5f5;
         color: #333;
     }

@@ -14,7 +14,7 @@ export const BarShart = styled.section`
             border-radius: 4px 4px 0 0;
             min-width: 30px;
             position: relative;
-            transition: all 0.3s ease;
+            transition: all 0.3s ease;  
         }
 
         .bar:hover {

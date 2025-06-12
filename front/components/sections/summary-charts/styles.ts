@@ -2,7 +2,7 @@ import styled from "styled-components";
 
 export const SummarySharts = styled.section`
     
-    margin-top: 1rem;
+    margin-top: 30px;
 
     display: grid;
     grid-template-columns: 2fr 1fr;
