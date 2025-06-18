@@ -1,3 +1,6 @@
+import { api } from '@/services/api';
+import { getApi } from '@/interfaces/api';
+
 import { Header } from '@/layout/header';
 import { Sidebar } from '@/layout/sidebar';
 import { SummaryCards } from  '@/sections/summary-cards'
@@ -19,4 +22,14 @@ export default function Home() {
     </S.HomePage>
  
   );
+}
+
+
+async function fetchData() {
+  try {
+    const response = await api.get<getApi>('/fast/OS/analise');
+    console.log(response.data);
+  } catch (error) {
+    console.error('Erro ao buscar dados:', error);
+  }
 }
