@@ -6,3 +6,5 @@ pandas
 asyncpg
 python-multipart
 scikit-learn
+pytest
+httpx
