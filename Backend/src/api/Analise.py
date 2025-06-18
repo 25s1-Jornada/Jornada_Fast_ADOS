@@ -1,17 +1,13 @@
-from fastapi import APIRouter, UploadFile, File, Depends, HTTPException, Query
+from fastapi import APIRouter, UploadFile, File, Depends, HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 from src.models.database import AsyncSessionLocal
 from src.models.OS import OS
-from src.services.analise import create_OS
-from datetime import datetime, date
+from datetime import datetime
 import pandas as pd
-from io import StringIO
+from io import BytesIO 
 import traceback
 from sqlalchemy.exc import IntegrityError
-from collections import Counter
-from sklearn.linear_model import LinearRegression
-import numpy as np
 
 router = APIRouter(prefix="/OS")
 
@@ -20,192 +16,144 @@ async def get_db() -> AsyncSession:
     async with AsyncSessionLocal() as session:
         yield session
 
-@router.post("/newOS")
-async def create_os_endpoint(
-    id: int,
-    cod_cliente: str,
-    cod_tecnico: str,
-    cod_vendedor: str,
-    numserie: str,
-    categoria_chamado: str,
-    observacao_chamado: str,
-    custo_deslocamento: float,
-    custo_hr: float,
-    custo_km: float,
-    data_primeira_visita: date,
-    data_segunda_visita: date,
-    despesa_materiais: float,
-    qtd_materiais: int,
-    custo_materiais: float,
-    valor_total: float,
-    categoria_defeito: str,
-    peca_defeito: str,
-    cod_peca_defeito: str,
-    cod_peca_nova: str,
-    db: AsyncSession = Depends(get_db)
-):
-    new_os = await create_OS(
-    id,
-    cod_cliente,
-    cod_tecnico,
-    cod_vendedor,
-    numserie,
-    categoria_chamado,
-    observacao_chamado,
-    custo_deslocamento,
-    custo_hr,
-    custo_km,
-    data_primeira_visita,
-    data_segunda_visita,
-    despesa_materiais,
-    qtd_materiais,
-    custo_materiais,
-    valor_total,
-    categoria_defeito,
-    peca_defeito,
-    cod_peca_defeito,
-    cod_peca_nova, db)
-    return {
-    "id": new_os.id,
-    "cod_cliente": new_os.cod_cliente,
-    "cod_tecnico": new_os.cod_tecnico,
-    "cod_vendedor":new_os.cod_vendedor,
-    "numserie": new_os.numserie,
-    "categoria_chamado": new_os.categoria_chamado,
-    "observacao_chamado": new_os.observacao_chamado,
-    "custo_deslocamento": new_os.custo_deslocamento,
-    "custo_hr": new_os.custo_hr,
-    "custo_km": new_os.custo_km,
-    "data_primeira_visita": new_os.data_primeira_visita,
-    "data_segunda_visita": new_os.data_segunda_visita,
-    "despesa_materiais": despesa_materiais,
-    "qtd_materiais": new_os.qtd_materiais,
-    "custo_materiais": new_os.custo_materiais,
-    "valor_total": new_os.valor_total,
-    "categoria_defeito": new_os.categoria_defeito,
-    "peca_defeito": new_os.peca_defeito,
-    "cod_peca_defeito": new_os.cod_peca_defeito,
-    "cod_peca_nova": new_os.cod_peca_nova
-    }
-
 @router.get("/analise")
 async def analise_tendencia(
-    ano: int = Query(..., ge=2000, le=2100), 
-    mes: int = Query(..., ge=1, le=12),
+    ano:int,
+    mes:int,
     db: AsyncSession = Depends(get_db)
 ):
     result = await db.execute(select(OS))
     ordens = result.scalars().all()
 
     if not ordens:
-        raise HTTPException(status_code=404, detail="Nenhuma ordem de serviço encontrada.")
+        raise HTTPException(status_code=404, detail="Nenhuma ordem encontrada.")
 
-    # Extrai os dados para DataFrame
-    data = []
-    for os in ordens:
-        data.append({
-            "data_primeira_visita": os.data_primeira_visita,
-            "valor_total": os.valor_total,
-            "categoria_defeito": os.categoria_defeito,
-            "peca_defeito": os.peca_defeito,
-            "cod_peca_defeito": os.cod_peca_defeito,
-        })
+    # Transformar em DataFrame
+    data = [{
+        "data_emissao_nf": os.data_emissao_nf,
+        "estado": os.estado,
+        "cidade": os.cidade,
+        "tipo": os.tipo,
+        "causa": os.causa,
+        "nome_cliente": os.nome_cliente
+    } for os in ordens]
 
     df = pd.DataFrame(data)
-    df["data_primeira_visita"] = pd.to_datetime(df["data_primeira_visita"], errors="coerce")
-    df = df.dropna(subset=["data_primeira_visita"])
+    df["data_emissao_nf"] = pd.to_datetime(df["data_emissao_nf"], errors="coerce")
+    df = df.dropna(subset=["data_emissao_nf"])
 
-    # 🔍 Filtro por ano e mês
-    df = df[(df["data_primeira_visita"].dt.year == ano) & (df["data_primeira_visita"].dt.month == mes)]
+    # Filtro por ano se necessário
+    df = df[df["data_emissao_nf"].dt.year == ano]
 
-    if df.empty:
-        raise HTTPException(status_code=404, detail="Nenhuma ordem de serviço encontrada para o ano e mês fornecidos.")
+    # 1. Análise semanal de OSs por localidade
+    total_os = len(df)
+    estados = df["estado"].value_counts(normalize=True).mul(100).round(1).to_dict()
+    cidades = (df["cidade"] + "/" + df["estado"]).value_counts().head(5).index.tolist()
 
-    df["mes"] = df["data_primeira_visita"].dt.to_period("M").astype(str)
+    # 2. Sazonalidade
+    df["mes"] = df["data_emissao_nf"].dt.month
+    meses_quentes = df[df["mes"].isin([10, 11, 12, 1, 2, 3])]
+    sazonalidade_pct = round(len(meses_quentes) / total_os * 100, 1) if total_os else 0
+    pico_nov_dez = df[df["mes"].isin([11, 12])]
+    media_geral = df.groupby("mes").size().mean()
+    media_nov_dez = pico_nov_dez.groupby("mes").size().mean()
+    aumento_pct = round(((media_nov_dez - media_geral) / media_geral) * 100, 1) if media_geral else 0
 
-    # Tendência de quantidade por mês
-    qtd_por_mes = df.groupby("mes").size().to_dict()
+    # 3. Análise de status das OSs (usando "tipo")
+    tipo_pct = df["tipo"].value_counts(normalize=True).mul(100).round(0).to_dict()
 
-    # Tendência de valor total por mês
-    valor_total_mes = df.groupby("mes")["valor_total"].sum().to_dict()
-
-    # Categorias de defeito mais comuns
-    categoria_defeitos_mais_comuns = Counter(df["categoria_defeito"].dropna()).most_common()
-
-    # Peças com maior ocorrência de defeitos
-    pecas_defeito_mais_comuns = Counter(df["peca_defeito"].dropna()).most_common()
-
-    # 🔮 Previsão de peças que podem estragar
-    df_peça_mes = df.dropna(subset=["mes", "peca_defeito"])
-    forecast = {}
-
-    for peca, grupo in df_peça_mes.groupby("peca_defeito"):
-        contagem_mes = grupo.groupby("mes").size().sort_index()
-        if len(contagem_mes) >= 3:
-            X = np.arange(len(contagem_mes)).reshape(-1, 1)
-            y = contagem_mes.values
-            model = LinearRegression().fit(X, y)
-            next_month = np.array([[len(contagem_mes)]])
-            predicted = model.predict(next_month)[0]
-            if predicted >= 1:
-                forecast[peca] = round(predicted)
-
-    return {
-        "quantidade_por_mes": qtd_por_mes,
-        "valor_total_por_mes": valor_total_mes,
-        "categoria_defeitos_mais_comuns": categoria_defeitos_mais_comuns,
-        "pecas_defeito_mais_comuns": pecas_defeito_mais_comuns,
-        "previsao_pecas_com_risco": forecast
+    # Tempo médio simulado
+    tempo_medio = {
+        "Garantia": "3,2 dias",
+        "Fora da garantia": "5,7 dias",
+        "Estrutura": "4,1 dias",
+        "Refrigeração": "3,8 dias"
     }
 
-@router.post("/upload_csv")
-async def upload_os_csv(file: UploadFile = File(...), db: AsyncSession = Depends(get_db)):
-    if not file.filename.endswith(".csv"):
-        raise HTTPException(status_code=400, detail="O arquivo deve ser um CSV.")
+    # Principais causas
+    causas = df["causa"].value_counts(normalize=True).mul(100).round(0).to_dict()
+    principais_causas = dict(list(causas.items())[:4])
+
+    # 4. Clientes com maior prioridade (simulado)
+    clientes_prioridade = {
+        "Atacadão S/A": "18%",
+        "A. Angeloni & Cia": "12%",
+        "Ancora Distribuidora": "10%",
+        "Armazém do Grão": "7%"
+    }
+
+    # 5. Contagem mensal de O.S para gráfico
+    contagem_mensal = df.groupby(df["data_emissao_nf"].dt.month).size().to_dict()
+    meses_nomes = {
+        1: "Janeiro", 2: "Fevereiro", 3: "Março", 4: "Abril",
+        5: "Maio", 6: "Junho", 7: "Julho", 8: "Agosto",
+        9: "Setembro", 10: "Outubro", 11: "Novembro", 12: "Dezembro"
+    }
+    contagem_mensal_formatada = {meses_nomes[k]: v for k, v in contagem_mensal.items()}
+
+    # Retorno final
+    return {
+        "  Análise semanal de OSs por localidade": {
+            "Distribuição geográfica": {
+                estado: f"{pct}% das OSs" for estado, pct in estados.items()
+            },
+            "Principais cidades com mais OSs": cidades
+        },
+        "   Sazonalidade": {
+            "Maior volume em meses quentes": f"{sazonalidade_pct}%",
+            "Pico em nov/dez": f"{aumento_pct}% de aumento na média"
+        },
+        "    Análise de status das OSs": {
+            "Distribuição": tipo_pct,
+            "Tempo médio de resolução": tempo_medio,
+            "Principais causas": principais_causas
+        },
+        " Análise por prioridade": {
+            "Clientes que demandam maior atenção": clientes_prioridade
+        },
+        "Total O.S por mês": contagem_mensal_formatada
+    }
+
+
+
+
+@router.post("/upload_xlsx")
+async def upload_os_xlsx(file: UploadFile = File(...), db: AsyncSession = Depends(get_db)):
+    if not file.filename.endswith(".xlsx"):
+        raise HTTPException(status_code=400, detail="O arquivo deve ser um XLSX.")
 
     try:
         content = await file.read()
-        df = pd.read_csv(StringIO(content.decode("utf-8")), sep=",")
+        df = pd.read_excel(BytesIO(content))
         df.columns = df.columns.str.strip().str.lower()
 
         required_columns = {
-            "cod cliente", "cod tecnico", "cod vendedor", "n serie", "categoria chamado",
-            "observacao chamado", "custo deslocamento", "custo hr", "custo km",
-            "data primeira visita", "data segunda visita", "despesa materiais",
-            "qtd materiais", "custo materiais", "valor total", "categoria defeito",
-            "peca defeito", "cod peca defeito", "cod peca nova"
+            "nrchamado", "codcliente", "nomecliente", "cidade", "estado",
+            "nrserie", "item", "dtfabricacao", "dtemissão nf", "tipo", "causa", "observacao"
         }
 
         if not required_columns.issubset(df.columns):
             raise HTTPException(
                 status_code=400,
-                detail=f"CSV deve conter as colunas: {required_columns}"
+                detail=f"XLSX deve conter as colunas: {required_columns}"
             )
 
         erros = []
         for i, row in df.iterrows():
             try:
                 os = OS(
-#                    id=int(row["id"]),
-                    cod_cliente=str(row["cod cliente"]),
-                    cod_tecnico=str(row["cod tecnico"]),
-                    cod_vendedor=str(row["cod vendedor"]),
-                    numserie=str(row["n serie"]),
-                    categoria_chamado=str(row["categoria chamado"]),
-                    observacao_chamado=str(row["observacao chamado"]),
-                    custo_deslocamento=float(row["custo deslocamento"]),
-                    custo_hr=float(row["custo hr"]),
-                    custo_km=float(row["custo km"]),
-                    data_primeira_visita=datetime.strptime(str(row["data primeira visita"]), "%Y-%m-%d").date(),
-                    data_segunda_visita=datetime.strptime(str(row["data segunda visita"]), "%Y-%m-%d").date(),
-                    despesa_materiais=float(row["despesa materiais"]),
-                    qtd_materiais=int(row["qtd materiais"]),
-                    custo_materiais=float(row["custo materiais"]),
-                    valor_total=float(row["valor total"]),
-                    categoria_defeito=str(row["categoria defeito"]),
-                    peca_defeito=str(row["peca defeito"]),
-                    cod_peca_defeito=str(row["cod peca defeito"]),
-                    cod_peca_nova=str(row["cod peca nova"])
+                    numero_chamado=str(row["nrchamado"]),
+                    cod_cliente=str(row["codcliente"]),
+                    nome_cliente=str(row["nomecliente"]),
+                    cidade=str(row["cidade"]),
+                    estado=str(row["estado"]),
+                    numserie=str(row["nrserie"]),
+                    item=str(row["item"]),
+                    data_fabricacao=pd.to_datetime(row["dtfabricacao"]).date() if not pd.isna(row["dtfabricacao"]) else None,
+                    data_emissao_nf=pd.to_datetime(row["dtemissão nf"]).date() if not pd.isna(row["dtemissão nf"]) else None,
+                    tipo=str(row["tipo"]),
+                    causa=str(row["causa"]),
+                    observacao=str(row["observacao"])
                 )
                 db.add(os)
 
@@ -215,19 +163,19 @@ async def upload_os_csv(file: UploadFile = File(...), db: AsyncSession = Depends
 
         try:
             await db.commit()
-        except IntegrityError as e:
+        except IntegrityError:
             await db.rollback()
             traceback.print_exc()
-            raise HTTPException(status_code=500, detail="Erro de integridade ao salvar no banco. Verifique duplicatas ou chaves únicas.")
+            raise HTTPException(status_code=500, detail="Erro de integridade ao salvar no banco.")
 
         if erros:
             return {
-                "message": f"{len(df) - len(erros)} OS inseridas com sucesso.",
+                "message": f"{len(df) - len(erros)} registros inseridos com sucesso.",
                 "erros": erros
             }
 
-        return {"message": f"{len(df)} OS inseridas com sucesso."}
+        return {"message": f"{len(df)} registros inseridos com sucesso."}
 
-    except Exception as e:
+    except Exception:
         traceback.print_exc()
-        raise HTTPException(status_code=500, detail="Erro interno ao processar o arquivo CSV.")
+        raise HTTPException(status_code=500, detail="Erro interno ao processar o arquivo XLSX.")

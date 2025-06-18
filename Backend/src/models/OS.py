@@ -15,9 +15,7 @@ class OS(Base):
     numserie = Column(String)  
 '''
 
-class OS(Base):
-    __tablename__ = "os"
-
+'''
     id = Column(Integer, primary_key=True, index=True)
 
     cod_cliente = Column(String, index=True)
@@ -46,3 +44,22 @@ class OS(Base):
     peca_defeito = Column(String)
     cod_peca_defeito = Column(String)
     cod_peca_nova = Column(String)
+'''
+
+
+class OS(Base):
+    __tablename__ = "os"
+    id = Column(Integer, primary_key=True, index=True)
+    data = Column(Date)	
+    numero_chamado	= Column(String)
+    cod_cliente	= Column(String)
+    nome_cliente	= Column(String)
+    cidade	= Column(String)
+    estado	= Column(String)
+    numserie	= Column(String)
+    item	= Column(String)
+    data_fabricacao	= Column(Date)
+    data_emissao_nf = Column(Date)
+    tipo	= Column(String)
+    causa	= Column(String)	
+    observacao = Column(String)
