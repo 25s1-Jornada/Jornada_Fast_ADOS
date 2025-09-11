@@ -68,3 +68,5 @@ As análises previstas para o decorrer do projeto incluem:
 
 - Criação de dados inventados para servirem de base para criação da análise.
 
+## Como rodar no VS Code a aplicação "main.py" localizado em Backend/src do grupo 3 da Fast
+- Dentro da pasta JORNADA_FAST_ADOS, no terminal executar o comando `docker compose up --build`
