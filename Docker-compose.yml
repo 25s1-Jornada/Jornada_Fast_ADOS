@@ -1,16 +1,21 @@
 services:
     db:
-        image: postgres:16.4
-        container_name: postgres_db
+        image: neo4j:5.11.0
+        container_name: neo4j_db
         restart: always
         environment:
-            POSTGRES_USER: admin
-            POSTGRES_PASSWORD: senha123
-            POSTGRES_DB: Fast_ADOS
+            - NEO4J_AUTH=neo4j/password
+            - NEO4J_DBMS_MEMORY_PAGECACHE_SIZE=10M
+            - NEO4J_DBMS_MEMORY_HEAP_INITIAL_SIZE=0M
+            - NEO4J_DBMS_MEMORY_HEAP_MAX_SIZE=260M
         ports:
-            - "5432:5432"
+            - "7474:7474"
+            - "7687:7687"
         volumes:
-            - postgres_data:/var/lib/postgresql/data
+            - neo4j_data:/data
+            - neo4j_logs:/logs
+            - neo4j_import:/var/lib/neo4j/import
+
     api:
         build: 
             context: ./Backend
@@ -19,14 +24,16 @@ services:
         depends_on:
             - db
         environment:
-            - DB_USER=admin
-            - DB_PASSWORD=senha123
-            - DB_HOST=db
-            - DB_PORT=5432
-            - DB_NAME=Fast_ADOS
+            - DB_USER=neo4j
+            - DB_PASSWORD=1GxifFAb61A-jARz8RCjsdxA7eiUN_4zVREmkB5z8h4
+            - DB_HOST=e5010517.databases.neo4j.io
+            - DB_PORT=7687
+            - DB_NAME=Jornada_Fast
         ports:
             - "8000:8000"
         command: uvicorn src.main:app --host 0.0.0.0 --port 8000 --reload
 
 volumes:
-    postgres_data:
+    neo4j_data: 
+    neo4j_logs: 
+    neo4j_import:
