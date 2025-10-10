@@ -68,5 +68,10 @@ As análises previstas para o decorrer do projeto incluem:
 
 - Criação de dados inventados para servirem de base para criação da análise.
 
-## Como rodar no VS Code a aplicação "main.py" localizado em Backend/src do grupo 3 da Fast
-- Dentro da pasta JORNADA_FAST_ADOS, no terminal executar o comando `docker compose up --build`
+## Etapas para rodar esse projeto no VS Code
+Use terminais do powershell para executar todos os passos abaixo.
+
+- <u>Caso queira usar o container do Docker Desktop</u>: dentro da pasta JORNADA_FAST_ADOS, no terminal executar o comando `docker compose up --build`
+- Abra o 2º terminal e execute `python -m uvicorn main:app --reload`
+- Acesse no navegador a URL http://127.0.0.1:8000/docs
+
