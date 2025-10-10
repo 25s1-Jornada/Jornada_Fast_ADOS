@@ -1,9 +1,4 @@
 fastapi
 uvicorn
-sqlalchemy
 python-dotenv
-pandas
-asyncpg
-python-multipart
-scikit-learn
-openpyxl
+neo4j==5.19.0

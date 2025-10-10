@@ -1,39 +1,32 @@
-services:
-    db:
-        image: neo4j:5.11.0
-        container_name: neo4j_db
-        restart: always
-        environment:
-            - NEO4J_AUTH=neo4j/password
-            - NEO4J_DBMS_MEMORY_PAGECACHE_SIZE=10M
-            - NEO4J_DBMS_MEMORY_HEAP_INITIAL_SIZE=0M
-            - NEO4J_DBMS_MEMORY_HEAP_MAX_SIZE=260M
-        ports:
-            - "7474:7474"
-            - "7687:7687"
-        volumes:
-            - neo4j_data:/data
-            - neo4j_logs:/logs
-            - neo4j_import:/var/lib/neo4j/import
+services: 
+  db:
+    image: neo4j:5.12.0
+    container_name: neo4j_db
+    restart: always
+    environment:
+      - NEO4J_AUTH=neo4j/password
+    ports:
+      - "7474:7474"   # HTTP
+      - "7687:7687"   # Bolt
+    volumes:
+      - neo4j_data:/data
+      - neo4j_logs:/logs
+      - neo4j_import:/var/lib/neo4j/import
 
-    api:
-        build: 
-            context: ./Backend
-        container_name: fastapi_app
-        restart: always
-        depends_on:
-            - db
-        environment:
-            - DB_USER=neo4j
-            - DB_PASSWORD=1GxifFAb61A-jARz8RCjsdxA7eiUN_4zVREmkB5z8h4
-            - DB_HOST=e5010517.databases.neo4j.io
-            - DB_PORT=7687
-            - DB_NAME=Jornada_Fast
-        ports:
-            - "8000:8000"
-        command: uvicorn src.main:app --host 0.0.0.0 --port 8000 --reload
+  api:
+    build: 
+      context: ./Backend
+    container_name: fastapi_app
+    restart: always
+    depends_on:
+      - db
+    env_file:
+      - ./Backend/.env
+    ports:
+      - "8000:8000"
+    command: uvicorn main:app --host 0.0.0.0 --port 8000 --reload
 
 volumes:
-    neo4j_data: 
-    neo4j_logs: 
-    neo4j_import:
+  neo4j_data:
+  neo4j_logs:
+  neo4j_import:
