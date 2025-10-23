@@ -1,22 +1,28 @@
 services: 
+  # Serviço do Neo4j
   db:
     image: neo4j:5.12.0
-    container_name: neo4j_db
+    container_name: Jornada_FAST
     restart: always
+
+    # Variáveis de ambiente para o Neo4j
     environment:
       - NEO4J_AUTH=neo4j/password
     ports:
-      - "7474:7474"   # HTTP
-      - "7687:7687"   # Bolt
+      - "7475:7475"   # Porta HTTP/Browser do Neo4j
+
+    # Volumes para persistência de dados do Neo4j
     volumes:
       - neo4j_data:/data
       - neo4j_logs:/logs
       - neo4j_import:/var/lib/neo4j/import
 
+  # Serviço da API Python (Flask/Gunicorn)
   api:
     build: 
       context: ./Backend
-    container_name: fastapi_app
+      dockerfile: Dockerfile
+    container_name: Fastapi_App
     restart: always
     depends_on:
       - db
@@ -24,7 +30,10 @@ services:
       - ./Backend/.env
     ports:
       - "8000:8000"
-    command: uvicorn main:app --host 0.0.0.0 --port 8000 --reload
+    volumes:
+      - ./Backend:/app
+      - ./Frontend:/app/Frontend
+    command: gunicorn app:app --bind 0.0.0.0:8000 --reload
 
 volumes:
   neo4j_data:

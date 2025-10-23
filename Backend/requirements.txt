@@ -1,4 +1,4 @@
-fastapi
-uvicorn
-python-dotenv
+gunicorn
+flask
 neo4j==5.19.0
+python-dotenv
