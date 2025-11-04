@@ -1,6 +1,6 @@
 import os
 import logging
-from flask import Flask, jsonify, render_template
+from flask import Flask, jsonify, send_from_directory
 
 # Configuração de Logging para Flask
 logging.basicConfig(level=logging.INFO)
@@ -26,9 +26,9 @@ from dotenv import load_dotenv
 # Carrega as variáveis de ambiente do arquivo .env
 load_dotenv()
 
-# Define o caminho do template folder com base no WORKDIR (/app) e no volume montado (Frontend)
-TEMPLATE_PATH = "/app/Frontend"
-app = Flask(__name__, template_folder=TEMPLATE_PATH)
+# Define o caminho do frontend
+TEMPLATE_PATH = '/app/frontend'
+app = Flask(__name__)
 
 # --- Configuração de Conexão com o Neo4j ---
 NEO4J_URI = os.getenv("NEO4J_URI", "bolt://db:7687")
@@ -54,23 +54,30 @@ except Exception as e:
 
 @app.route("/")
 def index():
-    """ROTA PRINCIPAL: Renderiza a página principal do dashboard (index.html)."""
+    """ROTA PRINCIPAL: Serve o index.html diretamente."""
     try:
-        logging.info(
-            f"Tentando renderizar template: index.html do caminho {TEMPLATE_PATH}"
-        )
-        return render_template("index.html")
+        logging.info(f"Servindo index.html do caminho: {TEMPLATE_PATH}")
+        # Verifica se a pasta existe
+        if os.path.exists(TEMPLATE_PATH):
+            logging.info(f"✅ Pasta frontend encontrada! Conteúdo: {os.listdir(TEMPLATE_PATH)}")
+        else:
+            logging.error(f"❌ Pasta {TEMPLATE_PATH} não existe!")
+            return jsonify({"error": "Frontend não montado"}), 500
+            
+        return send_from_directory(TEMPLATE_PATH, 'index.html')
     except Exception as e:
-        # Se houver qualquer erro (incluindo TemplateNotFound), ele será capturado aqui
-        logging.error(f"Erro ao renderizar o template 'index.html': {e}", exc_info=True)
-        # Retorna uma mensagem de erro mais detalhada para o navegador
-        error_message = (
-            f"Erro no servidor. Verifique os logs do Docker (docker logs Fastapi_App)."
-        )
-        return (
-            jsonify({"error": "Falha ao carregar o Frontend.", "details": str(e)}),
-            500,
-        )
+        logging.error(f"Erro ao servir 'index.html': {e}")
+        return jsonify({"error": str(e)}), 500
+
+
+@app.route("/<path:filename>")
+def serve_static(filename):
+    """Serve arquivos estáticos do frontend."""
+    try:
+        return send_from_directory(TEMPLATE_PATH, filename)
+    except Exception as e:
+        logging.error(f"Erro ao servir arquivo estático '{filename}': {e}")
+        return jsonify({"error": "Arquivo não encontrado"}), 404
 
 
 @app.route("/api/data")
@@ -89,7 +96,6 @@ def get_data():
 
     # ... (O restante da sua lógica de query Cypher continua aqui)
     cypher_query = """
-        // Consulta Cypher completa - reduzida para brevidade
         OPTIONAL MATCH (os:OrdemServico)
         WITH count(os) AS totalOS
         OPTIONAL MATCH (p:Produto)
