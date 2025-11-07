@@ -496,7 +496,7 @@
 
                 <div class="chart-container">
                     <div class="chart-header">
-                        <h3 class="chart-title">Employee Composition</h3>
+                        <h3 class="chart-title">Principais Causas de Atendimento</h3>
                     </div>
                     <div class="donut-chart">
                         <div class="donut-container">
@@ -505,11 +505,11 @@
                         <div class="donut-legend">
                             <div class="legend-item">
                                 <div class="legend-color" style="background: #2c5aa0;"></div>
-                                <span>55%</span>
+                                <span>Refrigeração (55%)</span>
                             </div>
                             <div class="legend-item">
                                 <div class="legend-color" style="background: #17a2b8;"></div>
-                                <span>65%</span>
+                                <span>Elétrica (65%)</span>
                             </div>
                             <div style="font-size: 12px; color: #999; margin-top: 10px;">
                                 Em Comparação Geral
@@ -538,89 +538,12 @@
                             <th>Status</th>
                         </tr>
                     </thead>
-                    <tbody>
-                        <tr>
-                            <td>
-                                <div class="employee-info">
-                                    <div class="employee-avatar"></div>
-                                    <span>Justin Lipshutz</span>
-                                </div>
-                            </td>
-                            <td>Marketing</td>
-                            <td>22</td>
-                            <td>
-                                <div style="display: flex; align-items: center; gap: 8px;">
-                                    <div class="progress-bar">
-                                        <div class="progress-fill" style="width: 100%;"></div>
-                                    </div>
-                                    <span>100%</span>
-                                </div>
-                            </td>
-                            <td><span class="status-badge status-permanent">Permanent</span></td>
-                        </tr>
-                        <tr>
-                            <td>
-                                <div class="employee-info">
-                                    <div class="employee-avatar"></div>
-                                    <span>Marcus Culhane</span>
-                                </div>
-                            </td>
-                            <td>Finance</td>
-                            <td>24</td>
-                            <td>
-                                <div style="display: flex; align-items: center; gap: 8px;">
-                                    <div class="progress-bar">
-                                        <div class="progress-fill" style="width: 95%;"></div>
-                                    </div>
-                                    <span>95%</span>
-                                </div>
-                            </td>
-                            <td><span class="status-badge status-contract">Contract</span></td>
-                        </tr>
-                        <tr>
-                            <td>
-                                <div class="employee-info">
-                                    <div class="employee-avatar"></div>
-                                    <span>Leo Stanton</span>
-                                </div>
-                            </td>
-                            <td>R&D</td>
-                            <td>28</td>
-                            <td>
-                                <div style="display: flex; align-items: center; gap: 8px;">
-                                    <div class="progress-bar">
-                                        <div class="progress-fill" style="width: 89%;"></div>
-                                    </div>
-                                    <span>89%</span>
-                                </div>
-                            </td>
-                            <td><span class="status-badge status-permanent">Permanent</span></td>
-                        </tr>
-                    </tbody>
+                    <tbody id="tableBody"></tbody>
                 </table>
             </div>
         </div>
     </div>
 
-    <script>
-        // Add interactivity
-        document.querySelectorAll('.nav-item').forEach(item => {
-            item.addEventListener('click', function() {
-                document.querySelectorAll('.nav-item').forEach(i => i.classList.remove('active'));
-                this.classList.add('active');
-            });
-        });
-
-        // Bar chart hover effects
-        document.querySelectorAll('.bar').forEach(bar => {
-            bar.addEventListener('mouseenter', function() {
-                this.style.transform = 'scale(1.05)';
-            });
-            
-            bar.addEventListener('mouseleave', function() {
-                this.style.transform = 'scale(1)';
-            });
-        });
-    </script>
+    <script src="index.js"></script>
 </body>
 </html>
