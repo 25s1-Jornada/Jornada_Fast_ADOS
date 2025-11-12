@@ -3,7 +3,7 @@ let donutChartInstance = null;
 
 async function fetchData() {
   try {
-    const response = await fetch('/apidata');
+    const response = await fetch('/api/data');
     const data = await response.json();
 
     // Atualizar gráficos

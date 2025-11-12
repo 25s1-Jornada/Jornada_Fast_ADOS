@@ -10,7 +10,7 @@ NEO4J_PASSWORD = os.getenv('NEO4J_PASSWORD', 'password')
 
 driver = GraphDatabase.driver(NEO4J_URI, auth=(NEO4J_USER, NEO4J_PASSWORD))
 
-@app.route('/apidata')
+@app.route('/api/data')
 def get_data():
     with driver.session() as session:
         # Exemplo: obter total de OS por período
@@ -35,6 +35,19 @@ def get_data():
             'osPorTecnico': os_por_tecnico
         }
         return jsonify(data)
+
+# Teste esta conexão
+@app.route("/api/test-db")
+def test_db():
+    if driver:
+        try:
+            with driver.session() as session:
+                result = session.run("RETURN 1 as test")
+                return jsonify({"status": "Conexão OK", "test": result.single()["test"]})
+        except Exception as e:
+            return jsonify({"error": str(e)}), 500
+    else:
+        return jsonify({"error": "Driver não inicializado"}), 500
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=8000, debug=False)
