@@ -4,7 +4,7 @@ services:
     build: 
       context: ./Backend
       dockerfile: Dockerfile
-    container_name: Fastapi_App
+    container_name: Fastapi_App_Max
     restart: always
     env_file:
       - ./Backend/.env
@@ -18,7 +18,7 @@ services:
   # Serviço do Frontend com hot reload
   frontend:
     image: node:18-alpine
-    container_name: Frontend_Dev
+    container_name: Frontend_Dev_Max
     working_dir: /app
     volumes:
       - ./Frontend:/app
