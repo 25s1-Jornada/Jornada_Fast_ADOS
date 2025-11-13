@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>FAST - Dashboard</title>
+  <link rel="stylesheet" href="style.css"/>
+  <!-- Chart.js CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+  <div class="container">
+    <!-- Sidebar -->
+    <div class="sidebar">
+      <div class="logo">FAST</div>
+      <ul class="nav-menu">
+        <li class="nav-item active">
+          <div class="nav-icon"></div>
+          <span>Dashboard</span>
+        </li>
+      </ul>
+    </div>
+
+    <!-- Main Content -->
+    <div class="main-content">
+      <div class="header">
+        <h1 class="page-title">Resumo Geral</h1>
+        <div class="user-info">
+          <div class="user-avatar">U</div>
+        </div>
+      </div>
+      
+      <!-- Gráficos -->
+      <div class="charts-section">
+        <div class="chart-container">
+          <div class="chart-header">
+            <h3 class="chart-title">Total de O.S por Período</h3>
+          </div>
+          <canvas id="barChart" height="50"></canvas>
+        </div>
+        <div class="chart-container">
+          <div class="chart-header">
+            <h3 class="chart-title">Principais Causas de Atendimento</h3>
+          </div>
+          <canvas id="donutChart" height="50"></canvas>
+        </div>
+      </div>
+      
+      <!-- Tabela -->
+      <div class="table-section">
+        <div class="table-header">
+          <h3 class="table-title">O.S por Técnico</h3>
+          <div class="table-filter">
+            <span>Filtro & Buscar</span>
+            <span>⚙️</span>
+          </div>
+        </div>
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>Técnico</th>
+              <th>Departamento</th>
+              <th>Área</th>
+              <th>Conclusão</th>
+              <th>Status</th>
+            </tr>
+          </thead>
+          <tbody id="tableBody"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+  <script src="Dashboard.js"></script>
+</body>
+</html>
