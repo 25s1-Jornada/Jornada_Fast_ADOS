@@ -1,0 +1,34 @@
+services: 
+  # Serviço API Python (Flask/Gunicorn)
+  api:
+    build: 
+      context: ./Backend
+      dockerfile: Dockerfile
+    container_name: Fastapi_App
+    restart: always
+    env_file:
+      - ./Backend/.env
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./Backend:/app
+      - ./Frontend:/app/frontend
+    command: python app.py
+
+  # Serviço do Frontend com hot reload
+  frontend:
+    image: node:18-alpine
+    container_name: Frontend_Dev
+    working_dir: /app
+    volumes:
+      - ./Frontend:/app
+    ports:
+      - "3000:3000"
+    command: >
+      sh -c "
+        if [ -f package.json ]; then
+          npm install && npm run dev;
+        else
+          npx serve -s . -l 3000;
+        fi
+      "

@@ -1,0 +1,200 @@
+/* Styles básicos para o dashboard */
+
+body {
+    margin: 0;
+    font-family: Arial, sans-serif;
+    background-color: #f1f3f6;
+  }
+  
+  .container {
+    display: flex;
+    height: 100vh;
+  }
+  
+  /* Sidebar */
+  .sidebar {
+    width: 220px;
+    background-color: #2c3e50;
+    color: #fff;
+    display: flex;
+    flex-direction: column;
+    padding: 20px;
+  }
+  
+  .logo {
+    font-size: 24px;
+    font-weight: bold;
+    margin-bottom: 30px;
+    text-align: center;
+  }
+  
+  .nav-menu {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+  }
+  
+  .nav-item {
+    padding: 15px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    border-radius: 4px;
+  }
+  
+  .nav-item:hover, .nav-item.active {
+    background-color: #34495e;
+  }
+  
+  .nav-icon {
+    width: 20px;
+    height: 20px;
+    margin-right: 10px;
+  }
+  
+  .main-content {
+    flex: 1;
+    padding: 20px;
+    overflow-y: auto;
+  }
+  
+  .header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+  }
+  
+  .page-title {
+    margin: 0;
+    font-size: 24px;
+    color: #333;
+  }
+  
+  .user-info {
+    display: flex;
+    align-items: center;
+  }
+  
+  .user-avatar {
+    width: 40px;
+    height: 40px;
+    background-color: #2c3e50;
+    color: #fff;
+    border-radius: 50%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-weight: bold;
+    font-size: 18px;
+  }
+  
+  /* Cartões de resumo */
+  .summary-cards {
+    display: flex;
+    gap: 15px;
+    margin-bottom: 30px;
+  }
+  
+  .card {
+    background-color: #fff;
+    padding: 15px;
+    flex: 1;
+    border-radius: 8px;
+    box-shadow: 0 0 10px rgba(0,0,0,0.1);
+  }
+  
+  .card-header {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 10px;
+  }
+  
+  .card-title {
+    font-weight: bold;
+    font-size: 14px;
+    color: #555;
+  }
+  
+  .card-trend {
+    font-size: 12px;
+    font-weight: bold;
+  }
+  
+  .trend-positive {
+    color: green;
+  }
+  
+  .trend-negative {
+    color: red;
+  }
+  
+  .card-value {
+    font-size: 24px;
+    font-weight: bold;
+    margin-bottom: 5px;
+  }
+  
+  .card-subtitle {
+    font-size: 12px;
+    color: #777;
+  }
+  
+  /* Gráficos */
+  .charts-section {
+    display: flex;
+    gap: 20px;
+    flex-wrap: wrap;
+  }
+  
+  .chart-container {
+    background-color: #fff;
+    padding: 15px;
+    border-radius: 8px;
+    flex: 1;
+    min-width: 300px;
+  }
+  
+  .chart-header {
+    margin-bottom: 10px;
+    font-weight: bold;
+    font-size: 14px;
+  }
+  
+  /* Tabela */
+  .table-section {
+    margin-top: 30px;
+  }
+  
+  .table-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 10px;
+  }
+  
+  .table-title {
+    font-weight: bold;
+    font-size: 14px;
+  }
+  
+  /* Tabela */
+  .data-table {
+    width: 100%;
+    border-collapse: collapse;
+    background-color: #fff;
+    border-radius: 4px;
+    overflow: hidden;
+    box-shadow: 0 0 10px rgba(0,0,0,0.05);
+  }
+  
+  .data-table th, .data-table td {
+    padding: 10px;
+    border-bottom: 1px solid #eee;
+    text-align: left;
+    font-size: 13px;
+  }
+  
+  .data-table th {
+    background-color: #f9f9f9;
+  }
