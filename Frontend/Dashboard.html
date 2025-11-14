@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>FAST - Dashboard</title>
-  <link rel="stylesheet" href="style.css"/>
+  <link rel="stylesheet" href="./styles/Dashboard.css"/>
   <!-- Chart.js CDN -->
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
@@ -14,9 +14,17 @@
     <div class="sidebar">
       <div class="logo">FAST</div>
       <ul class="nav-menu">
-        <li class="nav-item active">
+        <li class="nav-item" onclick="navigateTo('Dashboard.html')">
           <div class="nav-icon"></div>
-          <span>Dashboard</span>
+          <span>Dashboard Geral</span>
+        </li>
+        <li class="nav-item" onclick="navigateTo('Causas-Atendimento.html')">
+          <div class="nav-icon"></div>
+          <span>Análise de Causas</span>
+        </li>
+        <li class="nav-item" onclick="navigateTo('Tecnicos.html')">
+          <div class="nav-icon"></div>
+          <span>Ordem de Serviço por Técnico</span>
         </li>
       </ul>
     </div>
