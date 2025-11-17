@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>FAST - Dashboard</title>
+  <title>FAST - Dashboard Geral</title>
   <link rel="stylesheet" href="./styles/Dashboard.css"/>
   <!-- Chart.js CDN -->
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -24,60 +24,72 @@
         </li>
         <li class="nav-item" onclick="navigateTo('Tecnicos.html')">
           <div class="nav-icon"></div>
-          <span>Ordem de Serviço por Técnico</span>
+          <span>Ordens de Serviço</span>
         </li>
       </ul>
     </div>
 
     <!-- Main Content -->
-    <div class="main-content">
-      <div class="header">
-        <h1 class="page-title">Resumo Geral</h1>
-        <div class="user-info">
-          <div class="user-avatar">U</div>
+        <div class="main-content">
+            <div class="header">
+                <h1 class="page-title">Visão Geral de Falhas</h1>
+                <div class="user-info">
+                    <div class="user-avatar">U</div>
+                </div>
+            </div>
+            
+            <!-- Métricas Principais -->
+            <div class="metrics-grid">
+                <div class="metric-card">
+                    <h3>Total de OS</h3>
+                    <div class="metric-value" id="totalOS">-</div>
+                </div>
+                <div class="metric-card">
+                    <h3>Taxa de Recorrência</h3>
+                    <div class="metric-value" id="taxaRecorrencia">-</div>
+                </div>
+                <div class="metric-card">
+                    <h3>MITTR</h3>
+                    <div class="metric-value" id="mittr">-</div>
+                </div>
+                <div class="metric-card">
+                    <h3>% de Falhas Críticas</h3>
+                    <div class="metric-value" id="falhasCriticas">-</div>
+                </div>
+            </div>
+
+            <!-- Gráficos -->
+            <div class="charts-grid">
+                <div class="chart-card">
+                    <h3>Falhas por Tipo</h3>
+                    <div class="chart-container">
+                        <canvas id="failuresByTypeChart"></canvas>
+                    </div>
+                </div>
+                
+                <div class="chart-card">
+                    <h3>Falhas por Produto / Linha</h3>
+                    <div class="chart-container">
+                        <canvas id="failuresByProductChart"></canvas>
+                    </div>
+                </div>
+                
+                <div class="chart-card">
+                    <h3>Mapa de Calor: Falhas por Região / Centro de Serviço</h3>
+                    <div class="chart-container">
+                        <canvas id="heatmapChart"></canvas>
+                    </div>
+                </div>
+                
+                <div class="chart-card">
+                    <h3>Linha do Tempo de Volume de OS</h3>
+                    <div class="chart-container">
+                        <canvas id="timelineChart"></canvas>
+                    </div>
+                </div>
+            </div>
         </div>
-      </div>
-      
-      <!-- Gráficos -->
-      <div class="charts-section">
-        <div class="chart-container">
-          <div class="chart-header">
-            <h3 class="chart-title">Total de O.S por Período</h3>
-          </div>
-          <canvas id="barChart" height="50"></canvas>
-        </div>
-        <div class="chart-container">
-          <div class="chart-header">
-            <h3 class="chart-title">Principais Causas de Atendimento</h3>
-          </div>
-          <canvas id="donutChart" height="50"></canvas>
-        </div>
-      </div>
-      
-      <!-- Tabela -->
-      <div class="table-section">
-        <div class="table-header">
-          <h3 class="table-title">O.S por Técnico</h3>
-          <div class="table-filter">
-            <span>Filtro & Buscar</span>
-            <span>⚙️</span>
-          </div>
-        </div>
-        <table class="data-table">
-          <thead>
-            <tr>
-              <th>Técnico</th>
-              <th>Departamento</th>
-              <th>Área</th>
-              <th>Conclusão</th>
-              <th>Status</th>
-            </tr>
-          </thead>
-          <tbody id="tableBody"></tbody>
-        </table>
-      </div>
     </div>
-  </div>
   <script src="Dashboard.js"></script>
 </body>
 </html>
