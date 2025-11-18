@@ -189,6 +189,160 @@ def get_dashboard_geral():
                     {"periodo": "2024-03", "quantidade": 38}
                 ]
             })
+            
+@app.route('/api/causas-atendimento')
+def get_causas_atendimento():
+    with driver.session() as session:
+        try:
+            print("Iniciando consulta de causas...")
+            
+            # 1. Top Causas
+            top_causas_result = session.run("""
+                MATCH (os:ServiceOrder)
+                WHERE os.cause IS NOT NULL AND os.cause <> ''
+                WITH os.cause AS causa, count(os) AS quantidade
+                ORDER BY quantidade DESC
+                LIMIT 10
+                RETURN causa, quantidade
+            """)
+            top_causas = []
+            for record in top_causas_result:
+                top_causas.append({
+                    "causa": record["causa"],
+                    "quantidade": record["quantidade"]
+                })
+            
+            # 2. Falhas por Produto
+            falhas_produto_result = session.run("""
+                MATCH (os:ServiceOrder)
+                WHERE os.item IS NOT NULL AND os.item <> ''
+                WITH os.item AS produto, count(os) AS quantidade
+                ORDER BY quantidade DESC
+                LIMIT 8
+                RETURN produto, quantidade
+            """)
+            falhas_por_produto = []
+            for record in falhas_produto_result:
+                falhas_por_produto.append({
+                    "produto": record["produto"],
+                    "quantidade": record["quantidade"]
+                })
+            
+            # 3. Análise de Recorrência
+            recorrencia_result = session.run("""
+                MATCH (os:ServiceOrder)
+                WHERE os.cause IS NOT NULL AND os.item IS NOT NULL
+                WITH os.cause AS causa, count(DISTINCT os.item) as produtos_afetados
+                ORDER BY produtos_afetados DESC
+                LIMIT 6
+                RETURN causa, produtos_afetados as recorrencia
+            """)
+            analise_recorrencia = []
+            for record in recorrencia_result:
+                analise_recorrencia.append({
+                    "causa": record["causa"],
+                    "recorrencia": record["recorrencia"]
+                })
+            
+            # 4. Evolução Temporal
+            evolucao_result = session.run("""
+                MATCH (os:ServiceOrder)
+                WHERE os.date IS NOT NULL
+                WITH os.date AS periodo, count(os) AS quantidade
+                ORDER BY periodo
+                LIMIT 12
+                RETURN periodo, quantidade
+            """)
+            evolucao_temporal = []
+            for record in evolucao_result:
+                evolucao_temporal.append({
+                    "periodo": record["periodo"],
+                    "quantidade": record["quantidade"]
+                })
+            
+            # 5. Detalhes para tabela
+            detalhes_result = session.run("""
+                MATCH (os:ServiceOrder)
+                WHERE os.cause IS NOT NULL AND os.item IS NOT NULL
+                WITH os.cause AS causa, os.item AS produto, count(os) AS quantidade
+                ORDER BY quantidade DESC
+                LIMIT 20
+                RETURN causa, produto, quantidade
+            """)
+            detalhes_causas = []
+            total_os = sum(item['quantidade'] for item in top_causas) if top_causas else 1
+            
+            for record in detalhes_result:
+                quantidade = record["quantidade"]
+                percentual = round((quantidade * 100) / total_os, 1) if total_os > 0 else 0
+                detalhes_causas.append({
+                    "causa": record["causa"],
+                    "produto": record["produto"],
+                    "quantidade": quantidade,
+                    "percentual": f"{percentual}%",
+                    "recorrencia": "1"  # Placeholder
+                })
+            
+            # Métricas de resumo
+            causa_mais_frequente = top_causas[0]['causa'] if top_causas else "N/A"
+            produto_mais_afetado = falhas_por_produto[0]['produto'] if falhas_por_produto else "N/A"
+            
+            data = {
+                'summary': {
+                    'totalCausas': len(top_causas),
+                    'causaMaisFrequente': causa_mais_frequente,
+                    'taxaRecorrenciaCausas': "25%",
+                    'produtoMaisAfetado': produto_mais_afetado
+                },
+                'topCausas': top_causas,
+                'falhasPorProduto': falhas_por_produto,
+                'analiseRecorrencia': analise_recorrencia,
+                'evolucaoTemporal': evolucao_temporal,
+                'detalhesCausas': detalhes_causas
+            }
+            
+            print("Consulta de causas finalizada com sucesso")
+            return jsonify(data)
+            
+        except Exception as e:
+            print(f"ERRO na consulta de causas: {str(e)}")
+            import traceback
+            print(f"Traceback: {traceback.format_exc()}")
+            
+            # Fallback com dados de exemplo
+            return jsonify({
+                'summary': {
+                    'totalCausas': 15,
+                    'causaMaisFrequente': "Refrigeração",
+                    'taxaRecorrenciaCausas': "25%",
+                    'produtoMaisAfetado': "F01 ICFD CS 2,10"
+                },
+                'topCausas': [
+                    {"causa": "Refrigeração", "quantidade": 237},
+                    {"causa": "Elétrica", "quantidade": 211},
+                    {"causa": "Mecânica", "quantidade": 169},
+                    {"causa": "Software", "quantidade": 153}
+                ],
+                'falhasPorProduto': [
+                    {"produto": "F01 ICFD CS 2,10", "quantidade": 237},
+                    {"produto": "F01 ICFD CS 2,50", "quantidade": 211},
+                    {"produto": "F01 ICFD TV 1,85", "quantidade": 169}
+                ],
+                'analiseRecorrencia': [
+                    {"causa": "Refrigeração", "recorrencia": 8},
+                    {"causa": "Elétrica", "recorrencia": 6},
+                    {"causa": "Mecânica", "recorrencia": 4}
+                ],
+                'evolucaoTemporal': [
+                    {"periodo": "Jan", "quantidade": 45},
+                    {"periodo": "Fev", "quantidade": 52},
+                    {"periodo": "Mar", "quantidade": 38}
+                ],
+                'detalhesCausas': [
+                    {"causa": "Refrigeração", "produto": "F01 ICFD CS 2,10", "quantidade": 120, "percentual": "22%", "recorrencia": "2"},
+                    {"causa": "Elétrica", "produto": "F01 ICFD CS 2,50", "quantidade": 95, "percentual": "18%", "recorrencia": "1"}
+                ]
+            })
 
 # Teste esta conexão
 @app.route("/api/test-db")

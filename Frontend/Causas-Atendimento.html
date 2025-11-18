@@ -30,24 +30,92 @@
     </div>
 
     <!-- Main Content -->
-    <div class="main-content">
-        <div class="header">
-            <h1 class="page-title">Distribuição por Causas de Atendimento</h1>
-            <div class="user-info">
-                <div class="user-avatar">U</div>
+        <div class="main-content">
+            <div class="header">
+                <h1 class="page-title">Análise de Causas de Falhas</h1>
+                <div class="user-info">
+                    <div class="user-avatar">U</div>
+                </div>
             </div>
-        </div>
-        
-        <div class="charts-section">
-          <div class="chart-container" style="max-width: 600px; margin: 0 auto;">
-            <div class="chart-header">
-                <h3 class="chart-title">Principais Causas de Atendimento</h3>
+            
+            <!-- Indicadores Principais -->
+            <div class="metrics-grid">
+                <div class="metric-card">
+                    <h3>Total de Causas Identificadas</h3>
+                    <div class="metric-value" id="totalCausas">-</div>
+                </div>
+                <div class="metric-card">
+                    <h3>Causa Mais Frequente</h3>
+                    <div class="metric-value" id="causaMaisFrequente">-</div>
+                </div>
+                <div class="metric-card">
+                    <h3>Taxa de Recorrência</h3>
+                    <div class="metric-value" id="taxaRecorrenciaCausas">-</div>
+                </div>
+                <div class="metric-card">
+                    <h3>Produto Mais Afetado</h3>
+                    <div class="metric-value" id="produtoMaisAfetado">-</div>
+                </div>
             </div>
-            <canvas id="donutChart" height="50"></canvas>
-          </div>
+
+            <!-- Gráficos -->
+            <div class="charts-grid">
+                <!-- Ranking de Causas -->
+                <div class="chart-card">
+                    <h3>Top 10 Causas de Falhas</h3>
+                    <div class="chart-container">
+                        <canvas id="causasChart"></canvas>
+                    </div>
+                </div>
+                
+                <!-- Distribuição por Produto -->
+                <div class="chart-card">
+                    <h3>Falhas por Produto</h3>
+                    <div class="chart-container">
+                        <canvas id="produtosChart"></canvas>
+                    </div>
+                </div>
+                
+                <!-- Análise de Recorrência -->
+                <div class="chart-card">
+                    <h3>Análise de Recorrência</h3>
+                    <div class="chart-container">
+                        <canvas id="recorrenciaChart"></canvas>
+                    </div>
+                </div>
+                
+                <!-- Linha do Tempo -->
+                <div class="chart-card">
+                    <h3>Evolução Temporal das Causas</h3>
+                    <div class="chart-container">
+                        <canvas id="timelineCausasChart"></canvas>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Tabela Detalhada -->
+            <div class="table-section">
+                <div class="table-header">
+                    <h3>Detalhamento por Causa e Produto</h3>
+                </div>
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>Causa</th>
+                            <th>Produto</th>
+                            <th>Quantidade</th>
+                            <th>% do Total</th>
+                            <th>Recorrência</th>
+                        </tr>
+                    </thead>
+                    <tbody id="causasTableBody">
+                        <!-- Dados serão preenchidos via JavaScript -->
+                    </tbody>
+                </table>
+            </div>
         </div>
     </div>
-  </div>
-  <script src="Causas-Atendimento.js"></script>
+
+    <script src="Causas-Atendimento.js"></script>
 </body>
 </html>
