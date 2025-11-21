@@ -19,7 +19,6 @@ function getPageName(path) {
   return pages[path] || 'Dashboard Geral';
 }
 
-// causas-atendimento.js
 document.addEventListener('DOMContentLoaded', function() {
     // Configuração global do Chart.js
     Chart.defaults.font.family = "'Segoe UI', Tahoma, Geneva, Verdana, sans-serif";
@@ -34,7 +33,6 @@ document.addEventListener('DOMContentLoaded', function() {
     // Função para buscar dados da API
     async function fetchCausasData() {
         try {
-            console.log('Buscando dados de causas...');
             const response = await fetch(`${API_BASE_URL}/causas-atendimento`);
             
             if (!response.ok) {
@@ -42,7 +40,6 @@ document.addEventListener('DOMContentLoaded', function() {
             }
             
             const data = await response.json();
-            console.log('Dados de causas recebidos:', data);
             
             // Atualizar métricas
             updateMetrics(data);

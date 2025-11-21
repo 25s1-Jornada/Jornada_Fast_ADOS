@@ -36,7 +36,6 @@ function getPageName(path) {
   return pages[path] || 'Dashboard Geral';
 }
 
-// dashboard-geral.js
 document.addEventListener('DOMContentLoaded', function() {
     // Configuração global do Chart.js
     Chart.defaults.font.family = "'Segoe UI', Tahoma, Geneva, Verdana, sans-serif";
@@ -51,7 +50,6 @@ document.addEventListener('DOMContentLoaded', function() {
     // Função para buscar dados da API
     async function fetchDashboardData() {
         try {
-            console.log('Buscando dados do dashboard...');
             const response = await fetch(`${API_BASE_URL}/dashboard-geral`);
             
             if (!response.ok) {
@@ -59,7 +57,6 @@ document.addEventListener('DOMContentLoaded', function() {
             }
             
             const data = await response.json();
-            console.log('Dados recebidos:', data);
             
             // Atualizar métricas
             updateMetrics(data);
@@ -69,17 +66,16 @@ document.addEventListener('DOMContentLoaded', function() {
             
         } catch (error) {
             console.error('Erro ao buscar dados:', error);
-            // Usar dados de fallback se a API não estiver disponível
-            useFallbackData();
+            showErrorMessage(error.message);
         }
     }
     
     // Função para atualizar as métricas
     function updateMetrics(data) {
-        document.getElementById('totalOS').textContent = data.summary?.totalOS || '1132';
-        document.getElementById('taxaRecorrencia').textContent = data.summary?.taxaRecorrencia || '25%';
-        document.getElementById('mittr').textContent = data.summary?.mittr || '5,1h';
-        document.getElementById('falhasCriticas').textContent = data.summary?.falhasCriticas || '40%';
+        document.getElementById('totalOS').textContent = data.summary?.totalOS || 'N/A';
+        document.getElementById('taxaRecorrencia').textContent = data.summary?.taxaRecorrencia || 'N/A';
+        document.getElementById('mittr').textContent = data.summary?.mittr || 'N/A';
+        document.getElementById('falhasCriticas').textContent = data.summary?.falhasCriticas || 'N/A';
     }
     
     // Função para atualizar os gráficos
@@ -98,14 +94,10 @@ document.addEventListener('DOMContentLoaded', function() {
             failuresByTypeChart.destroy();
         }
         
-        // Usar dados da API ou dados de fallback
-        const labels = falhasPorTipo && falhasPorTipo.length > 0 
-            ? falhasPorTipo.map(item => item.tipo) 
-            : ['Elétrica', 'Mecânica', 'Software', 'Desgaste'];
+        // Usar dados da API
+        const labels = falhasPorTipo.map(item => item.tipo || 'N/A');
         
-        const values = falhasPorTipo && falhasPorTipo.length > 0
-            ? falhasPorTipo.map(item => item.quantidade)
-            : [45, 60, 30, 100];
+        const values = falhasPorTipo.map(item => item.quantidade || 0);
         
         failuresByTypeChart = new Chart(ctx, {
             type: 'bar',
@@ -175,13 +167,9 @@ document.addEventListener('DOMContentLoaded', function() {
             failuresByProductChart.destroy();
         }
         
-        const labels = falhasPorProduto && falhasPorProduto.length > 0
-            ? falhasPorProduto.map(item => item.produto)
-            : ['Produto A', 'Produto B', 'Produto C', 'Produto D'];
+        const labels = falhasPorProduto.map(item => item.produto || 'N/A');
         
-        const values = falhasPorProduto && falhasPorProduto.length > 0
-            ? falhasPorProduto.map(item => item.quantidade)
-            : [80, 60, 40, 120];
+        const values = falhasPorProduto.map(item => item.quantidade || 0);
         
         failuresByProductChart = new Chart(ctx, {
             type: 'bar',
@@ -229,9 +217,7 @@ document.addEventListener('DOMContentLoaded', function() {
             heatmapChart.destroy();
         }
         
-        const tipos = falhasPorTipo && falhasPorTipo.length > 0
-            ? falhasPorTipo.map(item => item.tipo).slice(0, 4)
-            : ['Elétrica', 'Mecânica', 'Software', 'Desgaste'];
+        const tipos = falhasPorTipo.map(item => item.tipo).slice(0, 4);
         
         heatmapChart = new Chart(ctx, {
             type: 'bar',
@@ -283,9 +269,8 @@ document.addEventListener('DOMContentLoaded', function() {
         }
         
         const labels = ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez'];
-        const values = volumeOS && volumeOS.length > 0
-            ? volumeOS.map(item => item.quantidade)
-            : [25, 30, 35, 40, 45, 50, 45, 40, 35, 30, 25, 20];
+
+        const values = volumeOS.map(item => item.quantidade || 0);
         
         timelineChart = new Chart(ctx, {
             type: 'line',
@@ -330,21 +315,6 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
     
-    // Dados de fallback caso a API não esteja disponível
-    function useFallbackData() {
-        console.log('Usando dados de fallback');
-        
-        document.getElementById('totalOS').textContent = '1132';
-        document.getElementById('taxaRecorrencia').textContent = '25%';
-        document.getElementById('mittr').textContent = '5,1h';
-        document.getElementById('falhasCriticas').textContent = '40%';
-        
-        updateFailuresByTypeChart(null);
-        updateFailuresByProductChart(null);
-        updateHeatmapChart(null);
-        updateTimelineChart(null);
-    }
-    
     // Testar conexão com a API
     async function testConnection() {
         try {
@@ -367,7 +337,7 @@ document.addEventListener('DOMContentLoaded', function() {
             await fetchDashboardData();
             setInterval(fetchDashboardData, 15000);
         } else {
-            useFallbackData();
+            showErrorMessage();
         }
     }
     
