@@ -1,11 +1,10 @@
-from fastapi import FastAPI
-from src.routes import os_routes
+from flask import Flask
 
-app = FastAPI(title="API - OS com Neo4j")
+app = Flask(__name__)
 
-# Rotas principais
-app.include_router(os_routes.router)
+@app.route('/')
+def home():
+    return "API rodando!"
 
-@app.get("/")
-def root():
-    return {"mensagem": "API com Neo4j está funcionando 🚀"}
+if __name__ == '__main__':
+    app.run()

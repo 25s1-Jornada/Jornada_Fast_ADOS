@@ -1,0 +1,8 @@
+{
+  "name": "fast-frontend",
+  "version": "1.0.0",
+  "scripts": {
+    "dev": "npx live-server --port=3000 --entry-file=Dashboard.html",
+    "start": "npx serve -s . -l 3000 --single Dashboard.html"
+  }
+}

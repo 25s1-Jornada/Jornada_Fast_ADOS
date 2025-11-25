@@ -29,6 +29,6 @@ services:
         if [ -f package.json ]; then
           npm install && npm run dev;
         else
-          npx serve -s . -l 3000;
+          npx serve -s . -l 3000 --single Dashboard.html;
         fi
       "
